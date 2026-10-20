@@ -22,8 +22,12 @@ export { doc, getDoc, onSnapshot, setDoc, serverTimestamp };
 
 const GUEST_KEY = "artifacts-guest";
 const CSS = `
-.au-chip{display:inline-flex;align-items:center;gap:8px;font:500 .84rem var(--f-body,system-ui,sans-serif);color:var(--fg,#1b1f1c)}
-.au-chip .au-who{max-width:22ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted,#646b65)}
+.au-chip{display:inline-flex;align-items:center;gap:8px;font:500 .9rem var(--f-body,system-ui,sans-serif);color:var(--fg,#1b1f1c);white-space:nowrap}
+.au-chip .au-av{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;overflow:hidden;background:var(--line,#e1e4dd);color:var(--fg,#1b1f1c);font:600 .8rem var(--f-body,system-ui,sans-serif)}
+.au-chip .au-av img{width:100%;height:100%;object-fit:cover}
+.au-chip .au-who{max-width:12ch;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.au-icon{width:34px;height:34px;padding:0;display:grid;place-items:center;flex:none}
+.au-icon svg{width:17px;height:17px}
 .au-btn{font:500 .84rem var(--f-body,system-ui,sans-serif);color:var(--fg,#1b1f1c);background:var(--surface,#fff);border:1px solid var(--line,#e1e4dd);border-radius:8px;padding:.4rem .7rem;cursor:pointer}
 .au-btn.primary{background:var(--fg,#1b1f1c);color:var(--bg,#fff);border-color:var(--fg,#1b1f1c);width:100%;padding:.6rem}
 .au-btn.google{width:100%;padding:.6rem;display:flex;align-items:center;justify-content:center;gap:8px}
@@ -72,9 +76,23 @@ export function mountAuth({ appName = "Artifacts", required = true, onSignIn = (
   // Account chip
   const chipHost = document.getElementById("account");
   const chip = document.createElement("div"); chip.className = "au-chip";
-  chip.innerHTML = `<span class="au-who"></span><button type="button" class="au-btn" data-act></button>`;
+  chip.innerHTML = `<span class="au-av au-hide" aria-hidden="true"></span><span class="au-who"></span><button type="button" class="au-btn" data-act></button>`;
   if (chipHost) chipHost.appendChild(chip);
-  const who = chip.querySelector(".au-who"), act = chip.querySelector("[data-act]");
+  const who = chip.querySelector(".au-who"), act = chip.querySelector("[data-act]"), av = chip.querySelector(".au-av");
+  const LOGOUT = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>`;
+  const firstName = u => ((u.displayName || "").trim().split(/\s+/)[0]) || (u.email || "").split("@")[0] || "You";
+  function showUser(u) {
+    const n = firstName(u);
+    who.textContent = n; who.title = u.displayName || u.email || "";
+    av.textContent = n.charAt(0).toUpperCase();
+    if (u.photoURL) { const img = new Image(); img.alt = ""; img.referrerPolicy = "no-referrer"; img.src = u.photoURL; img.onerror = () => { av.textContent = n.charAt(0).toUpperCase(); }; av.textContent = ""; av.appendChild(img); }
+    av.classList.remove("au-hide"); who.classList.remove("au-hide");
+    act.className = "au-btn au-icon"; act.innerHTML = LOGOUT; act.title = "Sign out"; act.setAttribute("aria-label", "Sign out");
+  }
+  function showSignedOut() {
+    av.classList.add("au-hide"); av.textContent = ""; who.classList.add("au-hide"); who.textContent = "";
+    act.className = "au-btn"; act.textContent = "Sign in"; act.removeAttribute("title"); act.removeAttribute("aria-label");
+  }
 
   // Dialog
   const back = document.createElement("div"); back.className = "au-back";
@@ -143,7 +161,7 @@ export function mountAuth({ appName = "Artifacts", required = true, onSignIn = (
       } else if (mode === "up") {
         const cred = await createUserWithEmailAndPassword(auth, email, pw);
         const name = form.displayName.value.trim();
-        if (name) { await updateProfile(cred.user, { displayName: name }); who.textContent = name; }
+        if (name) { await updateProfile(cred.user, { displayName: name }); showUser(cred.user); }
       } else {
         await signInWithEmailAndPassword(auth, email, pw);
       }
@@ -173,13 +191,11 @@ export function mountAuth({ appName = "Artifacts", required = true, onSignIn = (
     if (user) {
       wasSignedIn = true;
       try { localStorage.removeItem(GUEST_KEY); } catch (_) {}
-      who.textContent = user.displayName || user.email || "Signed in";
-      act.textContent = "Sign out";
+      showUser(user);
       close(); form.reset(); setMode("in");
       onSignIn(user);
     } else {
-      who.textContent = "Not signed in";
-      act.textContent = "Sign in";
+      showSignedOut();
       if (wasSignedIn) onSignOut();
       wasSignedIn = false;
       let guest = false; try { guest = localStorage.getItem(GUEST_KEY) === "1"; } catch (_) {}
