@@ -4,40 +4,58 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Artifacts</title>
+<meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-:root{--bg:#f5f6f2;--surface:#fff;--fg:#1b1f1c;--muted:#646b65;--line:#e1e4dd;--vue:#2f9e6e;--theory:#3a4fb0;
-  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif}
-@media (prefers-color-scheme: dark){:root{--bg:#131614;--surface:#1b1f1c;--fg:#e9ece7;--muted:#9ba39c;--line:#2b312d;--vue:#5fd39e;--theory:#9eacf5;color-scheme:dark}}
+/* Always black, with the MAD-II tracker's green as the accent. */
+:root{
+  --bg:#000000; --surface:#0d0f0e; --sunk:#070807; --fg:#e9ece7; --muted:#8e968f; --line:#1f2421;
+  --vue:#5fd39e; --vue-soft:#10261c; --theory:#5fd39e;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body)}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--fg);font:15px/1.55 var(--f-body);min-height:100vh}
 .wrap{max-width:860px;margin:0 auto;padding:24px 16px 64px}
-.head{display:flex;justify-content:flex-end;margin-bottom:18px}
-h1{font:800 clamp(1.8rem,5vw,2.6rem)/1.1 var(--f-display);margin:0}
-.sub{color:var(--muted);margin:.5rem 0 22px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
-.card{display:block;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;color:inherit;text-decoration:none;transition:border-color .15s}
-.card:hover{border-color:var(--vue)}
-.card h2{font:600 1.05rem var(--f-body);margin:0 0 4px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:40px}
+.mark{font:600 .8rem var(--f-mono);color:var(--vue);letter-spacing:.04em}
+h1{font:800 clamp(2.2rem,7vw,3.4rem)/1 var(--f-display);margin:0;letter-spacing:-.02em}
+h1 span{color:var(--vue)}
+.sub{color:var(--muted);margin:.8rem 0 32px;max-width:52ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{position:relative;display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--vue);transform:translateY(-2px)}
+.card:focus-visible{outline:2px solid var(--vue);outline-offset:3px}
+.card .tag{align-self:flex-start;font:600 .7rem var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--vue);background:var(--vue-soft);border-radius:6px;padding:.2rem .5rem}
+.card h2{font:600 1.08rem var(--f-body);margin:6px 0 0}
 .card p{margin:0;color:var(--muted);font-size:.9rem}
-.card .tag{display:inline-block;font:600 .7rem var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--vue);margin-bottom:8px}
+.card .go{margin-top:auto;padding-top:10px;color:var(--vue);font-size:.85rem;font-weight:600}
+.foot{color:var(--muted);font-size:.8rem;margin-top:40px;border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion: reduce){.card{transition:none}.card:hover{transform:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="head"><div id="account"></div></div>
-  <h1>Artifacts</h1>
+  <div class="head"><span class="mark">ayuschmishra / artifacts</span><div id="account"></div></div>
+  <h1>Arti<span>facts</span></h1>
   <p class="sub">Small study tools. Sign in once and your progress follows you to any device.</p>
+
   <div class="grid">
-    <!-- Add a card per tool. Each tool lives in its own folder with an index.html. -->
+    <!-- One card per tool. Copy a card, change the link, tag, title and line. -->
     <a class="card" href="mad2-tracker/">
       <span class="tag">IIT Madras · MAD-II</span>
       <h2>MAD-II study tracker</h2>
       <p>All 57 videos, week by week, with theory and code checklists and notes.</p>
+      <span class="go">Open →</span>
     </a>
   </div>
+
+  <p class="foot">Progress is private to your account.</p>
 </div>
 <script type="module">
 import { mountAuth } from "./assets/auth.js";
