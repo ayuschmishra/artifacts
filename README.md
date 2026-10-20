@@ -13,15 +13,24 @@ firebase.json              only needed if you deploy rules with the Firebase CLI
 
 Data lives at `users/{uid}/apps/{appId}` in Firestore, one document per tool per person.
 
-## Adding another tool
+## Adding a new artifact (any self-contained HTML page)
 
-1. Copy the `_template` folder and rename the copy, e.g. `dl-tracker`. The folder name becomes the URL: `/artifacts/dl-tracker/`.
-2. In `dl-tracker/index.html`, change the four commented spots:
-   1. `<title>`
-   2. the heading and the line under it
-   3. `APP_ID` (unique, never change it later, e.g. `"dl-tracker"`)
-   4. `SECTIONS`: your weeks/topics and items, each with a short permanent `id`
-3. In the root `index.html`, copy the MAD-II card and point it at `dl-tracker/`.
-4. `git add . && git commit -m "Add DL tracker" && git push`. Live in about a minute.
+1. Make a folder, e.g. `js_course`, and put the page inside it as `index.html`.
+   The folder name becomes the URL: `/artifacts/js_course/`, and is where progress is stored, so don't rename it later.
+2. In that page's `<head>`, right after the `<meta name="viewport" ...>` line, add:
 
-Sign-in, per-user saving and the black/green look come with the template. Firebase needs no changes.
+   ```html
+   <script src="../assets/sync.js"></script>
+   ```
+
+   This adds the "← All artifacts" bar and sign-in, and saves whatever the page keeps in
+   localStorage to the person's account. If the page has its own Firebase login block, delete it.
+3. In the root `index.html`, add one line to `ARTIFACTS`:
+
+   ```js
+   { folder: "js_course", name: "JavaScript Course", tag: "Apna College · JS", about: "One line about it." },
+   ```
+
+4. `git add . && git commit -m "Add JavaScript Course" && git push`. Live in about a minute.
+
+Firebase needs no changes. `_template/` is a starter if you want to write a checklist page from scratch.

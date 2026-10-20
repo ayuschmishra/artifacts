@@ -43,18 +43,30 @@ h1{font:800 clamp(2.2rem,7vw,3.4rem)/1 var(--f-display);margin:0;letter-spacing:
   <h1>Artifacts</h1>
   <p class="sub">Small study tools. Sign in once and your progress follows you to any device.</p>
 
-  <div class="grid">
-    <!-- One card per tool. Copy a card, change the link, tag, title and line. -->
-    <a class="card" href="mad2-tracker/">
-      <span class="tag">IIT Madras · MAD-II</span>
-      <h2>MAD-II study tracker</h2>
-      <p>All 57 videos, week by week, with theory and code checklists and notes.</p>
-      <span class="go">Open →</span>
-    </a>
-  </div>
+  <div class="grid" id="grid"></div>
 
   <p class="foot">Progress is private to your account.</p>
 </div>
+<script>
+/* ===== Your artifacts. Add one line per page; the card appears on the home page. =====
+   folder: the folder name in the repo (the page inside it is index.html)
+   name:   what the card says
+   tag:    small label above the name (optional)
+   about:  one line under the name (optional)                                        */
+const ARTIFACTS = [
+  { folder: "mad2-tracker", name: "MAD-II study tracker", tag: "IIT Madras · MAD-II", about: "All 57 videos, week by week, with theory and code checklists and notes." },
+  { folder: "js_course",    name: "JavaScript Course",    tag: "Apna College · JS",   about: "Every example and practice question from the JS full course, lecture by lecture." },
+];
+
+const esc = s => String(s || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+document.getElementById("grid").innerHTML = ARTIFACTS.map(a => `
+  <a class="card" href="${esc(a.folder)}/">
+    ${a.tag ? `<span class="tag">${esc(a.tag)}</span>` : ""}
+    <h2>${esc(a.name)}</h2>
+    ${a.about ? `<p>${esc(a.about)}</p>` : ""}
+    <span class="go">Open →</span>
+  </a>`).join("");
+</script>
 <script type="module">
 import { mountAuth } from "./assets/auth.js";
 mountAuth({ appName: "these tools", required: false });
