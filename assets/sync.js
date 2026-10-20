@@ -22,13 +22,13 @@
   const APP = (me.dataset.app || parts[parts.length - 1] || "page").replace(/[^\w-]/g, "_");
   const REG = "artifacts:keys:" + APP;            // which localStorage keys belong to this page
   const GUARD = "artifacts:reloaded:" + APP;      // stops reload loops
-  const SKIP = /^(firebase|artifacts)/i;          // never sync these
+  const SKIP = /^(firebase|artifacts|__)/i;       // never sync these (internal/test keys)
 
   const ls = window.localStorage;
   const S = Storage.prototype, rawSet = S.setItem, rawRemove = S.removeItem;
   const safe = f => { try { return f(); } catch (_) { return undefined; } };
 
-  let keys = new Set(safe(() => JSON.parse(ls.getItem(REG))) || []);
+  let keys = new Set((safe(() => JSON.parse(ls.getItem(REG))) || []).filter(k => !SKIP.test(k)));
   const remember = () => safe(() => rawSet.call(ls, REG, JSON.stringify([...keys])));
 
   let saver = null, timer = null, touched = false, applying = false;

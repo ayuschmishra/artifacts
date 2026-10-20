@@ -36,7 +36,8 @@ h1{font:800 clamp(2.2rem,7vw,3.4rem)/1 var(--f-display);margin:0;letter-spacing:
 .card:active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);transition:none}
 .card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .card .tag{align-self:flex-start;font:600 .7rem var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--tag-bg);border-radius:6px;padding:.2rem .5rem}
-.card h2{font:600 1.08rem var(--f-body);margin:6px 0 0}
+.card h2{font:600 1.08rem var(--f-body);margin:6px 0 0;display:flex;align-items:center;gap:10px}
+.card h2 img{width:26px;height:26px;object-fit:contain;flex:none}
 .card p{margin:0;color:var(--muted);font-size:.9rem}
 .card .go{margin-top:auto;padding-top:10px;color:var(--fg);font-size:.85rem;font-weight:600}
 .foot{color:var(--muted);font-size:.8rem;margin-top:40px;border-top:1px solid var(--line);padding-top:16px}
@@ -58,17 +59,19 @@ h1{font:800 clamp(2.2rem,7vw,3.4rem)/1 var(--f-display);margin:0;letter-spacing:
    folder: the folder name in the repo (the page inside it is index.html)
    name:   what the card says
    tag:    small label above the name (optional)
-   about:  one line under the name (optional)                                        */
+   about:  one line under the name (optional)
+   icon:   a logo image next to the name, e.g. "pytorch/logo.svg" (optional; put the file in that folder)                                        */
 const ARTIFACTS = [
   { folder: "mad2-tracker", name: "MAD-II study tracker", tag: "IIT Madras · MAD-II", about: "All 57 videos, week by week, with theory and code checklists and notes." },
-  { folder: "js_course",    name: "JavaScript Course",    tag: "Apna College · JS",   about: "Every example and practice question from the JS full course, lecture by lecture." },
+  { folder: "js_course",    name: "JavaScript Course",    tag: "Apna College · JS",   about: "Every example and practice question from the JS full course, lecture by lecture.", icon: "js_course/logo.svg" },
+  { folder: "pytorch",      name: "PyTorch",              tag: "Self-study · PyTorch", about: "Package by package, from tensors to training, evaluating and shipping models.", icon: "pytorch/logo.svg" },
 ];
 
 const esc = s => String(s || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 document.getElementById("grid").innerHTML = ARTIFACTS.map(a => `
   <a class="card" href="${esc(a.folder)}/">
     ${a.tag ? `<span class="tag">${esc(a.tag)}</span>` : ""}
-    <h2>${esc(a.name)}</h2>
+    <h2>${a.icon ? `<img src="${esc(a.icon)}" alt="" onerror="this.remove()">` : ""}${esc(a.name)}</h2>
     ${a.about ? `<p>${esc(a.about)}</p>` : ""}
     <span class="go">Open →</span>
   </a>`).join("");

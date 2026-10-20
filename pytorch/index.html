@@ -1,0 +1,2748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../assets/sync.js"></script>
+<title>PyTorch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; sticky progress header; one collapsible block per stage, sub-headed groups inside; items are tick rows. */
+:root{
+  --bg:#f8f6f3; --surface:#ffffff; --fg:#1d1a19; --muted:#6c6560; --line:#e6e0da;
+  --accent:#c8441e; --accent-soft:#fbe7df; --ok:#2f7d4f; --ok-soft:#e3f2e8;
+  --int:#5c3a8a; --int-soft:#efe7f8; --course:#1f5f8b; --course-soft:#e2eef7;
+  --adv:#8a1f3d; --adv-soft:#f7e1e8;
+  --code-bg:#f2eee9;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151312; --surface:#1e1b1a; --fg:#f0ebe7; --muted:#a69d97; --line:#322c29;
+  --accent:#ff8159; --accent-soft:#3a2219; --ok:#7fd3a0; --ok-soft:#1e3328;
+  --int:#c9a8f2; --int-soft:#2e2440; --course:#8cc4ec; --course-soft:#1b2c3a;
+  --adv:#f29bb3; --adv-soft:#3d1f29;
+  --code-bg:#2a2522; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#151312; --surface:#1e1b1a; --fg:#f0ebe7; --muted:#a69d97; --line:#322c29;
+  --accent:#ff8159; --accent-soft:#3a2219; --ok:#7fd3a0; --ok-soft:#1e3328;
+  --int:#c9a8f2; --int-soft:#2e2440; --course:#8cc4ec; --course-soft:#1b2c3a;
+  --adv:#f29bb3; --adv-soft:#3d1f29;
+  --code-bg:#2a2522; color-scheme:dark;}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body);}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:840px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+h1{font-size:clamp(1.8rem,4.6vw,2.5rem);font-weight:800;letter-spacing:-.01em;line-height:1.1}
+h1 .torch{color:var(--accent)}
+.sub{color:var(--muted);margin:.5rem 0 0;max-width:64ch}
+code{font-family:var(--f-mono);font-size:.82em;background:var(--code-bg);padding:.12em .45em;border-radius:5px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin:20px 0 18px;padding:12px 0}
+.top-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.overall{flex:1 1 260px;min-width:0}
+.overall-label{display:flex;justify-content:space-between;gap:8px;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.overall-label strong{color:var(--fg);font-weight:600}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:500 .85rem var(--f-body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.42rem .7rem;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn:focus-visible,.item input:focus-visible,summary:focus-visible,textarea:focus-visible,.ref:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.next{font-size:.85rem;margin-top:6px}
+.next a{color:var(--accent);font-weight:600;text-decoration:none}
+.status{font-size:.78rem;color:var(--muted);margin-top:4px}
+
+.how{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:.92rem}
+.how ol{margin:.4rem 0 0;padding-left:1.2rem;display:grid;gap:4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.stage>summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center}
+.stage>summary::-webkit-details-marker{display:none}
+.num{font:600 .76rem var(--f-mono);color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:.2rem .45rem;white-space:nowrap}
+.stage.complete .num{background:var(--ok);color:var(--surface);border-color:var(--ok)}
+.stage h2{font-size:1.1rem;font-weight:600;min-width:0}
+.stage h2 .mono{font-family:var(--f-mono);font-size:.95em}
+.count{font:600 .82rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.minibar{grid-column:1/-1;height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+.minibar>i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s ease}
+.stage.complete .minibar>i{background:var(--ok)}
+.blurb{padding:0 16px 6px;font-size:.88rem;color:var(--muted);max-width:68ch}
+
+.group{padding:6px 8px 4px}
+.group-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 8px 6px;border-top:1px solid var(--line)}
+.group:first-of-type .group-head{border-top:0}
+.group-head h3{font-size:.95rem;font-weight:600}
+.group-head .gcount{font:600 .75rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.items{list-style:none;margin:0;padding:0}
+.item{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:8px 8px;border-radius:8px}
+.item:hover{background:var(--bg)}
+.item input{width:18px;height:18px;margin:3px 0 0;accent-color:var(--ok);cursor:pointer}
+.item .body{min-width:0;display:grid;gap:4px}
+.item label{cursor:pointer}
+.item .t{font-weight:500}
+.item .note{font-size:.84rem;color:var(--muted)}
+.item .code{justify-self:start;max-width:100%;overflow-x:auto;white-space:pre;display:block;font-family:var(--f-mono);font-size:.78rem;background:var(--code-bg);padding:3px 8px;border-radius:5px}
+.ref{font-size:.8rem;color:var(--accent);text-decoration:none;justify-self:start}
+.ref:hover{text-decoration:underline}
+.item.done .t{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line);text-decoration-thickness:2px}
+.item.done .code,.item.done .note{opacity:.6}
+.tag{display:inline-block;font:600 .66rem/1.6 var(--f-body);letter-spacing:.04em;text-transform:uppercase;border-radius:5px;padding:0 .4rem;margin-right:6px;vertical-align:1px}
+.tag.core{background:var(--accent-soft);color:var(--accent)}
+.tag.intermediate{background:var(--int-soft);color:var(--int)}
+.tag.course{background:var(--course-soft);color:var(--course)}
+.tag.advanced{background:var(--adv-soft);color:var(--adv)}
+.controls .lbl{font-size:.8rem;color:var(--muted);align-self:center}
+body.hide-done .item.done{display:none}
+body.hide-done .stage.complete{display:none}
+body.hide-done .group.complete{display:none}
+
+.notes{padding:6px 16px 16px;border-top:1px solid var(--line);margin-top:6px}
+.notes label{display:block;font-size:.76rem;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin:8px 0 4px}
+.notes textarea{width:100%;min-height:60px;resize:vertical;font:14px/1.5 var(--f-body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.empty{padding:22px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+.foot{color:var(--muted);font-size:.82rem;margin-top:22px}
+@media (prefers-reduced-motion: reduce){.bar>i,.minibar>i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>PyTorch Path: from <span class="torch">tensors</span> to shipping models</h1>
+  <p class="sub">Package by package: <code>torch</code>, <code>torch.utils.data</code>, <code>torch.nn</code>, <code>torch.autograd</code>, <code>torch.optim</code>, then training, architecture, evaluation, inference, reproducibility and the tools used in industry. Built from your course workflow notebook and the official pytorch.org tutorials.</p>
+
+  <div class="top">
+    <div class="top-row">
+      <div class="overall">
+        <div class="overall-label"><span><strong id="ov-num">0 / 0</strong> done</span><span id="ov-pct">0%</span></div>
+        <div class="bar"><i id="ov-bar"></i></div>
+      </div>
+      <div class="controls">
+        <span class="lbl">Show:</span>
+        <button class="btn" id="btn-int" aria-pressed="true" type="button">Intermediate</button>
+        <button class="btn" id="btn-adv" aria-pressed="true" type="button">Advanced</button>
+        <button class="btn" id="btn-hide" aria-pressed="false" type="button">Hide done</button>
+        <button class="btn" id="btn-expand" type="button">Expand all</button>
+        <button class="btn" id="btn-export" type="button">Export progress</button>
+        <label class="btn" for="file-import">Import progress</label>
+        <input type="file" id="file-import" accept="application/json" hidden>
+      </div>
+    </div>
+    <div class="next" id="next"></div>
+    <div class="status" id="status">Loading your checklist…</div>
+  </div>
+
+  <div class="how">
+    <strong>How to use this</strong>
+    <ol>
+      <li>Work through the stages in order. Open a stage, read the group headings, then do each item in a notebook.</li>
+      <li>Tick an item only when you can write the code from memory and explain what it does.</li>
+      <li>If you had to look it up, leave it unticked and write what tripped you up in "Where I got stuck".</li>
+    </ol>
+    <div class="legend"><span class="tag core">Core</span><span class="tag course">Course notebook</span><span class="tag intermediate">Intermediate</span><span class="tag advanced">Advanced</span></div>
+  </div>
+
+  <div id="stages"></div>
+  <p class="foot">Intermediate items are everyday industry skills to pick up once the core feels easy. Advanced items are what research and large-scale teams use: learn them after you've trained a few real models. Turning a level off with the Show buttons hides it and leaves it out of your progress.</p>
+</div>
+
+<script>
+window.PP_SECTIONS = [
+ {
+  "order": 1,
+  "title": "Tensor Fundamentals",
+  "blurb": "The torch package itself: creating, shaping and moving tensors. Every later stage assumes this is automatic.",
+  "groups": [
+   {
+    "title": "Creating tensors",
+    "items": [
+     {
+      "id": "tensors-001",
+      "title": "Import torch, print the version, check for a GPU",
+      "code": "import torch; torch.__version__; torch.cuda.is_available()"
+     },
+     {
+      "id": "tensors-002",
+      "title": "Scalar, vector, matrix and 3D tensor; read .ndim and .shape",
+      "code": "torch.tensor(7); torch.tensor([[1, 2], [3, 4]])",
+      "note": "ndim = number of nested bracket levels.",
+      "link": "https://docs.pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html"
+     },
+     {
+      "id": "tensors-003",
+      "title": "Random tensors with torch.rand, including an image-shaped one",
+      "code": "torch.rand(3, 224, 224)"
+     },
+     {
+      "id": "tensors-004",
+      "title": "randn vs randint: normal values vs random integers",
+      "code": "torch.randn(2, 3); torch.randint(0, 10, (3,))",
+      "note": "rand is uniform in [0, 1), randn is mean 0 / std 1."
+     },
+     {
+      "id": "tensors-005",
+      "title": "zeros and ones",
+      "code": "torch.zeros(3, 4); torch.ones(3, 4)"
+     },
+     {
+      "id": "tensors-006",
+      "title": "full, eye and empty",
+      "code": "torch.full((2, 2), 7.0); torch.eye(3)",
+      "note": "empty gives uninitialised memory: never read it before writing."
+     },
+     {
+      "id": "tensors-007",
+      "title": "arange for evenly stepped ranges",
+      "code": "torch.arange(0, 10, 2)"
+     },
+     {
+      "id": "tensors-008",
+      "title": "linspace for a fixed number of points",
+      "code": "torch.linspace(0, 1, steps=5)"
+     },
+     {
+      "id": "tensors-009",
+      "title": "Copy another tensor's shape with *_like",
+      "code": "torch.zeros_like(x); torch.rand_like(x)"
+     },
+     {
+      "id": "tensors-010",
+      "title": "torch.tensor copies data; torch.as_tensor and from_numpy may share it",
+      "code": "torch.as_tensor(arr)"
+     }
+    ]
+   },
+   {
+    "title": "Attributes and dtypes",
+    "items": [
+     {
+      "id": "tensors-011",
+      "title": "Print the 3 attributes behind most bugs",
+      "code": "x.dtype, x.shape, x.device"
+     },
+     {
+      "id": "tensors-012",
+      "title": "Rank and size: ndim, numel(), size(dim)",
+      "code": "x.ndim; x.numel(); x.size(0)"
+     },
+     {
+      "id": "tensors-013",
+      "title": "Know the defaults: float32 for decimals, int64 for integers",
+      "code": "torch.tensor([1.0]).dtype; torch.tensor([1]).dtype"
+     },
+     {
+      "id": "tensors-014",
+      "title": "Create float16 and bfloat16 tensors",
+      "code": "torch.tensor([1.0], dtype=torch.bfloat16)",
+      "note": "Half precision is what mixed-precision training uses."
+     },
+     {
+      "id": "tensors-015",
+      "title": "Change dtype with .type, .to, .float(), .long()",
+      "code": "x.type(torch.float16); y.long()"
+     },
+     {
+      "id": "tensors-016",
+      "title": "Integer vs float tensors: why mean() fails on ints and CrossEntropy wants Long targets",
+      "code": "x.float().mean(); target.long()"
+     }
+    ]
+   },
+   {
+    "title": "Math, comparisons and reductions",
+    "items": [
+     {
+      "id": "tensors-017",
+      "title": "Element-wise + - * / with numbers and tensors",
+      "code": "x + 10; torch.mul(x, 10)"
+     },
+     {
+      "id": "tensors-018",
+      "title": "Comparisons give Boolean tensors",
+      "code": "x > 0; x == y; (x > 0).sum()"
+     },
+     {
+      "id": "tensors-019",
+      "title": "Element-wise multiply vs matrix multiply",
+      "code": "x * x   vs   x @ x"
+     },
+     {
+      "id": "tensors-020",
+      "title": "Matmul rules: inner dims match, result takes outer dims",
+      "code": "torch.matmul(A, B); A @ B; torch.bmm(a, b)",
+      "note": "bmm multiplies batches of matrices: (b, n, m) @ (b, m, p)."
+     },
+     {
+      "id": "tensors-021",
+      "title": "Fix a shape error with transpose",
+      "code": "A @ B.T"
+     },
+     {
+      "id": "tensors-022",
+      "title": "min, max, mean, sum over the whole tensor",
+      "code": "x.float().mean(); x.sum()"
+     },
+     {
+      "id": "tensors-023",
+      "title": "Reduce along a dimension with dim= and keepdim=",
+      "code": "x.sum(dim=1, keepdim=True)",
+      "note": "dim=0 collapses rows (one value per column), dim=1 collapses columns."
+     },
+     {
+      "id": "tensors-024",
+      "title": "argmin and argmax",
+      "code": "x.argmax(); logits.argmax(dim=1)"
+     },
+     {
+      "id": "tensors-025",
+      "title": "Everyday math: exp, log, abs, sqrt, clamp",
+      "code": "torch.clamp(x, min=0); x.exp().log()"
+     },
+     {
+      "id": "tensors-026",
+      "title": "softmax across a dimension",
+      "code": "torch.softmax(logits, dim=1)"
+     }
+    ]
+   },
+   {
+    "title": "Shape manipulation",
+    "items": [
+     {
+      "id": "tensors-027",
+      "title": "reshape to a new shape with the same number of elements",
+      "code": "x.reshape(1, 9); x.reshape(-1, 3)",
+      "note": "-1 means 'work this dimension out for me'."
+     },
+     {
+      "id": "tensors-028",
+      "title": "view, and how it shares memory with the original",
+      "code": "z = x.view(1, 9); z[:, 0] = 5  # x changes too"
+     },
+     {
+      "id": "tensors-029",
+      "title": "squeeze and unsqueeze",
+      "code": "x.unsqueeze(dim=0); x.squeeze()",
+      "note": "unsqueeze(0) adds the batch dimension for single-sample inference."
+     },
+     {
+      "id": "tensors-030",
+      "title": "permute and transpose",
+      "code": "img.permute(2, 0, 1)  # HWC -> CHW"
+     },
+     {
+      "id": "tensors-031",
+      "title": "flatten and unflatten",
+      "code": "x.flatten(start_dim=1)",
+      "note": "flatten(start_dim=1) keeps the batch dimension."
+     },
+     {
+      "id": "tensors-032",
+      "title": "cat joins along an existing dim; stack creates a new one",
+      "code": "torch.cat([a, b], dim=0); torch.stack([a, b], dim=0)"
+     },
+     {
+      "id": "tensors-033",
+      "title": "split and chunk",
+      "code": "x.split(2, dim=0); x.chunk(3, dim=1)"
+     },
+     {
+      "id": "tensors-034",
+      "title": "expand vs repeat",
+      "code": "x.expand(3, -1); x.repeat(3, 1)",
+      "note": "expand makes no copy; repeat copies memory."
+     }
+    ]
+   },
+   {
+    "title": "Indexing",
+    "items": [
+     {
+      "id": "tensors-035",
+      "title": "Basic indexing and slicing",
+      "code": "x[0]; x[:, 0]; x[..., -1]; x[1:3]"
+     },
+     {
+      "id": "tensors-036",
+      "title": "Boolean masks",
+      "code": "x[x > 0]; x[mask] = 0"
+     },
+     {
+      "id": "tensors-037",
+      "title": "Fancy indexing with an index tensor",
+      "code": "x[torch.tensor([0, 2])]"
+     },
+     {
+      "id": "tensors-038",
+      "title": "torch.where for element-wise if/else",
+      "code": "torch.where(x > 0, x, torch.zeros_like(x))"
+     },
+     {
+      "id": "tensors-039",
+      "title": "gather to pick one value per row",
+      "code": "probs.gather(1, labels.unsqueeze(1))",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Broadcasting",
+    "items": [
+     {
+      "id": "tensors-040",
+      "title": "Broadcasting rules: align shapes from the right; each dim must match or be 1",
+      "code": "torch.ones(3, 1) + torch.ones(1, 4)  # -> (3, 4)",
+      "link": "https://docs.pytorch.org/docs/stable/notes/broadcasting.html"
+     },
+     {
+      "id": "tensors-041",
+      "title": "The silent bug: (N,) vs (N, 1) broadcasting to (N, N) inside a loss",
+      "code": "loss_fn(pred.squeeze(), y)",
+      "note": "Always check pred.shape == target.shape before computing a loss."
+     }
+    ]
+   },
+   {
+    "title": "Memory and in-place operations",
+    "items": [
+     {
+      "id": "tensors-042",
+      "title": "In-place ops end with an underscore",
+      "code": "x.add_(1); x.zero_()"
+     },
+     {
+      "id": "tensors-043",
+      "title": "clone() makes an independent copy",
+      "code": "y = x.clone()"
+     },
+     {
+      "id": "tensors-044",
+      "title": "contiguous(): why view sometimes fails after permute",
+      "code": "x.permute(1, 0).contiguous().view(-1)"
+     },
+     {
+      "id": "tensors-045",
+      "title": "In-place changes to tensors that need grad raise errors",
+      "note": "Avoid x += ... on tensors that are part of the autograd graph."
+     }
+    ]
+   },
+   {
+    "title": "NumPy and devices",
+    "items": [
+     {
+      "id": "tensors-046",
+      "title": "NumPy to tensor and back; numpy arrays arrive as float64",
+      "code": "torch.from_numpy(arr).float(); t.numpy()"
+     },
+     {
+      "id": "tensors-047",
+      "title": ".item() and .tolist() to get Python values",
+      "code": "loss.item(); t.tolist()"
+     },
+     {
+      "id": "tensors-048",
+      "title": "Device-agnostic setup",
+      "code": "device = \"cuda\" if torch.cuda.is_available() else \"cpu\""
+     },
+     {
+      "id": "tensors-049",
+      "title": "Move tensors with .to(device); bring back with .cpu() before NumPy",
+      "code": "x.to(device).cpu().numpy()"
+     },
+     {
+      "id": "tensors-050",
+      "title": "Read and fix 'expected all tensors to be on the same device' errors"
+     },
+     {
+      "id": "tensors-051",
+      "title": "Seed random numbers",
+      "code": "torch.manual_seed(42)"
+     }
+    ]
+   },
+   {
+    "title": "Advanced tensors",
+    "items": [
+     {
+      "title": "Strides and storage: how view and permute work without copying",
+      "lv": "advanced",
+      "code": "x.stride(); x.is_contiguous(); x.untyped_storage()",
+      "id": "tensors-a01"
+     },
+     {
+      "title": "einsum for readable multi-dimensional operations",
+      "lv": "advanced",
+      "code": "torch.einsum(\"bij,bjk->bik\", a, b)",
+      "note": "Attention scores are one einsum: \"bhqd,bhkd->bhqk\".",
+      "id": "tensors-a02"
+     },
+     {
+      "title": "Set a default device for all new tensors",
+      "lv": "advanced",
+      "code": "torch.set_default_device(\"cuda\")",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/changing_default_device.html",
+      "id": "tensors-a03"
+     },
+     {
+      "title": "Nested tensors for ragged batches without padding",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/unstable/nestedtensor.html",
+      "id": "tensors-a04"
+     }
+    ]
+   }
+  ],
+  "id": "tensors"
+ },
+ {
+  "order": 2,
+  "title": "torch.utils.data",
+  "blurb": "The first step of every workflow: turning raw data into shuffled, batched tensors.",
+  "groups": [
+   {
+    "title": "Datasets",
+    "items": [
+     {
+      "id": "data-001",
+      "title": "What a map-style Dataset is: __len__ and __getitem__",
+      "code": "class MyDS(Dataset): ...",
+      "link": "https://docs.pytorch.org/tutorials/beginner/basics/data_tutorial.html"
+     },
+     {
+      "id": "data-002",
+      "title": "TensorDataset for tensors already in memory",
+      "code": "ds = TensorDataset(X, y); ds[0]  # (x0, y0)"
+     },
+     {
+      "id": "data-003",
+      "title": "Write a custom Dataset for files on disk (images + labels from a CSV)",
+      "code": "def __getitem__(self, i): img = Image.open(self.paths[i])",
+      "link": "https://docs.pytorch.org/tutorials/beginner/data_loading_tutorial.html"
+     },
+     {
+      "id": "data-004",
+      "title": "Load files lazily in __getitem__, not all at once in __init__",
+      "note": "Keeps memory low for big image datasets."
+     },
+     {
+      "id": "data-005",
+      "title": "Apply transform and target_transform inside __getitem__",
+      "code": "if self.transform: img = self.transform(img)"
+     },
+     {
+      "id": "data-006",
+      "title": "random_split with a seeded generator",
+      "code": "random_split(ds, [0.8, 0.2], generator=torch.Generator().manual_seed(42))"
+     },
+     {
+      "id": "data-007",
+      "title": "Subset for a chosen list of indices (e.g. a stratified split)",
+      "code": "Subset(ds, train_idx)",
+      "note": "Pair with sklearn's train_test_split(stratify=labels) to keep class ratios."
+     },
+     {
+      "id": "data-008",
+      "title": "ConcatDataset to join datasets",
+      "code": "ConcatDataset([ds_a, ds_b])"
+     },
+     {
+      "id": "data-009",
+      "title": "IterableDataset for data too large to index",
+      "code": "class Stream(IterableDataset): def __iter__(self): ...",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "DataLoader essentials",
+    "items": [
+     {
+      "id": "data-010",
+      "title": "Wrap a Dataset in a DataLoader and loop over batches",
+      "code": "for X, y in loader: ..."
+     },
+     {
+      "id": "data-011",
+      "title": "batch_size and what the batch dimension is",
+      "code": "DataLoader(ds, batch_size=32)  # X.shape[0] == 32"
+     },
+     {
+      "id": "data-012",
+      "title": "shuffle=True for training, False for validation and test"
+     },
+     {
+      "id": "data-013",
+      "title": "drop_last and when a tiny final batch hurts (BatchNorm)",
+      "code": "DataLoader(ds, batch_size=32, drop_last=True)"
+     },
+     {
+      "id": "data-014",
+      "title": "len(loader) counts batches; len(loader.dataset) counts samples"
+     },
+     {
+      "id": "data-015",
+      "title": "Inspect one batch and print its shapes",
+      "code": "X, y = next(iter(train_loader)); X.shape, y.shape"
+     }
+    ]
+   },
+   {
+    "title": "Samplers",
+    "items": [
+     {
+      "id": "data-016",
+      "title": "RandomSampler vs SequentialSampler (what shuffle does under the hood)"
+     },
+     {
+      "id": "data-017",
+      "title": "WeightedRandomSampler for imbalanced classes",
+      "code": "WeightedRandomSampler(weights, num_samples=len(weights))"
+     },
+     {
+      "id": "data-018",
+      "title": "sampler= and shuffle=True can't be used together",
+      "note": "Passing a sampler replaces shuffling."
+     },
+     {
+      "id": "data-019",
+      "title": "BatchSampler for custom batch grouping",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Collation",
+    "items": [
+     {
+      "id": "data-020",
+      "title": "default_collate: how a list of samples becomes batch tensors"
+     },
+     {
+      "id": "data-021",
+      "title": "Custom collate_fn for variable-length data",
+      "code": "collate_fn=lambda b: pad_sequence([x for x, _ in b], batch_first=True)"
+     }
+    ]
+   },
+   {
+    "title": "Speed and workers",
+    "items": [
+     {
+      "id": "data-022",
+      "title": "num_workers for parallel loading",
+      "code": "DataLoader(ds, num_workers=2)",
+      "note": "On Windows, scripts need an  if __name__ == '__main__':  guard."
+     },
+     {
+      "id": "data-023",
+      "title": "pin_memory=True with .to(device, non_blocking=True)",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/pinmem_nonblock.html"
+     },
+     {
+      "id": "data-024",
+      "title": "persistent_workers and prefetch_factor",
+      "lv": "intermediate"
+     },
+     {
+      "id": "data-025",
+      "title": "Seed workers with worker_init_fn and a generator for repeatable shuffles",
+      "link": "https://docs.pytorch.org/docs/stable/notes/randomness.html"
+     },
+     {
+      "id": "data-026",
+      "title": "Read the Data Loading Optimization guide",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/intermediate_data_loading_tutorial.html",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Built-in datasets and transforms (torchvision)",
+    "items": [
+     {
+      "id": "data-027",
+      "title": "Download a built-in dataset",
+      "code": "datasets.FashionMNIST(root=\"data\", train=True, download=True, transform=ToTensor())"
+     },
+     {
+      "id": "data-028",
+      "title": "ImageFolder for one-folder-per-class image data",
+      "code": "datasets.ImageFolder(\"data/train\", transform=tf)"
+     },
+     {
+      "id": "data-029",
+      "title": "transforms.v2 pipeline: Resize, ToImage, ToDtype, Normalize",
+      "code": "v2.Compose([v2.Resize(224), v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])",
+      "link": "https://docs.pytorch.org/vision/stable/transforms.html"
+     },
+     {
+      "id": "data-030",
+      "title": "Augment training data only: flips, random crops, colour jitter",
+      "code": "v2.RandomHorizontalFlip(); v2.RandomResizedCrop(224)"
+     },
+     {
+      "id": "data-031",
+      "title": "Segmentation: apply the same geometric transform to image and mask",
+      "code": "tv_tensors.Mask(mask)",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced data loading",
+    "items": [
+     {
+      "title": "Shard an IterableDataset across workers with get_worker_info()",
+      "lv": "advanced",
+      "code": "info = torch.utils.data.get_worker_info()",
+      "id": "data-a01"
+     },
+     {
+      "title": "DistributedSampler for multi-GPU training, and calling set_epoch each epoch",
+      "lv": "advanced",
+      "code": "sampler.set_epoch(epoch)",
+      "id": "data-a02"
+     },
+     {
+      "title": "Shard-based storage (e.g. WebDataset) for datasets too big for one disk read pattern",
+      "lv": "advanced",
+      "id": "data-a03"
+     },
+     {
+      "title": "Profile the input pipeline: is the GPU waiting on data?",
+      "lv": "advanced",
+      "note": "If GPU use drops between steps, loading is the bottleneck.",
+      "id": "data-a04"
+     }
+    ]
+   }
+  ],
+  "id": "data"
+ },
+ {
+  "order": 3,
+  "title": "torch.nn",
+  "blurb": "The building blocks of every model, module by module.",
+  "groups": [
+   {
+    "title": "nn.Module essentials",
+    "items": [
+     {
+      "id": "nn-001",
+      "title": "Subclass nn.Module, call super().__init__(), create layers in __init__",
+      "link": "https://docs.pytorch.org/tutorials/beginner/basics/buildmodel_tutorial.html"
+     },
+     {
+      "id": "nn-002",
+      "title": "forward(), and why you call model(x) instead of model.forward(x)",
+      "note": "model(x) runs hooks; forward() alone skips them."
+     },
+     {
+      "id": "nn-003",
+      "title": "nn.Parameter vs plain tensor attributes vs register_buffer",
+      "code": "self.register_buffer(\"mean\", torch.zeros(3))",
+      "note": "Buffers move with .to(device) and save in state_dict but aren't trained."
+     },
+     {
+      "id": "nn-004",
+      "title": "parameters(), named_parameters(), children(), modules()"
+     },
+     {
+      "id": "nn-005",
+      "title": "state_dict(): what it holds",
+      "code": "model.state_dict().keys()"
+     },
+     {
+      "id": "nn-006",
+      "title": "train() vs eval() modes",
+      "note": "Changes how Dropout and BatchNorm behave."
+     },
+     {
+      "id": "nn-007",
+      "title": ".to(device) moves every parameter and buffer"
+     },
+     {
+      "id": "nn-008",
+      "title": "Freeze layers with requires_grad_(False)",
+      "code": "for p in model.backbone.parameters(): p.requires_grad_(False)"
+     },
+     {
+      "id": "nn-009",
+      "title": "Read 'What is torch.nn really?'",
+      "link": "https://docs.pytorch.org/tutorials/beginner/nn_tutorial.html"
+     }
+    ]
+   },
+   {
+    "title": "Containers",
+    "items": [
+     {
+      "id": "nn-010",
+      "title": "nn.Sequential",
+      "code": "nn.Sequential(nn.Linear(10, 32), nn.ReLU(), nn.Linear(32, 1))"
+     },
+     {
+      "id": "nn-011",
+      "title": "nn.ModuleList, and why a plain Python list hides layers from .parameters()",
+      "code": "self.blocks = nn.ModuleList([Block() for _ in range(4)])"
+     },
+     {
+      "id": "nn-012",
+      "title": "nn.ModuleDict",
+      "code": "self.heads = nn.ModuleDict({\"cls\": ..., \"box\": ...})"
+     },
+     {
+      "id": "nn-013",
+      "title": "Named layers in Sequential with OrderedDict"
+     }
+    ]
+   },
+   {
+    "title": "Linear layers",
+    "items": [
+     {
+      "id": "nn-014",
+      "title": "nn.Linear(in, out): weight shape is (out, in); y = xWᵀ + b",
+      "code": "nn.Linear(in_features=1, out_features=1)"
+     },
+     {
+      "id": "nn-015",
+      "title": "nn.Flatten before a Linear layer in CNNs",
+      "code": "nn.Flatten()  # (N, C, H, W) -> (N, C*H*W)"
+     },
+     {
+      "id": "nn-016",
+      "title": "nn.Identity as a placeholder (e.g. remove a model's head)",
+      "code": "model.fc = nn.Identity()"
+     },
+     {
+      "id": "nn-017",
+      "title": "nn.LazyLinear infers in_features on the first call",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Activations",
+    "items": [
+     {
+      "id": "nn-018",
+      "title": "ReLU and LeakyReLU",
+      "code": "nn.ReLU(); nn.LeakyReLU(0.01)"
+     },
+     {
+      "id": "nn-019",
+      "title": "GELU and SiLU (modern defaults in transformers and new CNNs)"
+     },
+     {
+      "id": "nn-020",
+      "title": "Sigmoid and Tanh, and the vanishing-gradient problem"
+     },
+     {
+      "id": "nn-021",
+      "title": "Softmax and LogSoftmax: the dim argument",
+      "note": "Don't put Softmax before CrossEntropyLoss: it applies it internally."
+     }
+    ]
+   },
+   {
+    "title": "Convolution layers",
+    "items": [
+     {
+      "id": "nn-022",
+      "title": "nn.Conv2d arguments: in_channels, out_channels, kernel_size, stride, padding",
+      "code": "nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1)"
+     },
+     {
+      "id": "nn-023",
+      "title": "Output-size formula",
+      "code": "out = (H + 2*padding - kernel_size) // stride + 1"
+     },
+     {
+      "id": "nn-024",
+      "title": "Conv1d for signals and sequences",
+      "code": "nn.Conv1d(1, 16, kernel_size=5)",
+      "note": "Useful for ECG-style 1D data."
+     },
+     {
+      "id": "nn-025",
+      "title": "Upsampling: ConvTranspose2d vs Upsample + Conv2d",
+      "code": "nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2)"
+     },
+     {
+      "id": "nn-026",
+      "title": "groups and depthwise-separable convolutions",
+      "code": "nn.Conv2d(32, 32, 3, padding=1, groups=32)",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Pooling",
+    "items": [
+     {
+      "id": "nn-027",
+      "title": "MaxPool2d and AvgPool2d",
+      "code": "nn.MaxPool2d(kernel_size=2)  # halves H and W"
+     },
+     {
+      "id": "nn-028",
+      "title": "AdaptiveAvgPool2d((1, 1)) for input-size-independent heads"
+     }
+    ]
+   },
+   {
+    "title": "Normalization",
+    "items": [
+     {
+      "id": "nn-029",
+      "title": "BatchNorm1d/2d: running stats, train vs eval behaviour",
+      "code": "nn.BatchNorm2d(32)"
+     },
+     {
+      "id": "nn-030",
+      "title": "LayerNorm (transformers)",
+      "code": "nn.LayerNorm(d_model)"
+     },
+     {
+      "id": "nn-031",
+      "title": "GroupNorm for small batches (common in segmentation)",
+      "code": "nn.GroupNorm(8, 64)"
+     }
+    ]
+   },
+   {
+    "title": "Dropout",
+    "items": [
+     {
+      "id": "nn-032",
+      "title": "nn.Dropout(p), and that it switches off in eval()",
+      "code": "nn.Dropout(p=0.2)"
+     },
+     {
+      "id": "nn-033",
+      "title": "Dropout2d for convolutional feature maps"
+     }
+    ]
+   },
+   {
+    "title": "Embeddings",
+    "items": [
+     {
+      "id": "nn-034",
+      "title": "nn.Embedding: integer ids to learnable vectors",
+      "code": "nn.Embedding(num_embeddings=10000, embedding_dim=128)"
+     }
+    ]
+   },
+   {
+    "title": "Recurrent layers",
+    "items": [
+     {
+      "id": "nn-035",
+      "title": "RNN, LSTM and GRU input shapes with batch_first=True",
+      "code": "nn.LSTM(input_size=1, hidden_size=64, batch_first=True)"
+     },
+     {
+      "id": "nn-036",
+      "title": "LSTM outputs: output vs (h_n, c_n)",
+      "code": "out, (h_n, c_n) = lstm(x)"
+     },
+     {
+      "id": "nn-037",
+      "title": "pack_padded_sequence for variable-length batches",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Attention and transformers",
+    "items": [
+     {
+      "id": "nn-038",
+      "title": "nn.MultiheadAttention: query, key, value and masks",
+      "code": "nn.MultiheadAttention(embed_dim=128, num_heads=4, batch_first=True)"
+     },
+     {
+      "id": "nn-039",
+      "title": "nn.TransformerEncoderLayer and nn.TransformerEncoder"
+     },
+     {
+      "id": "nn-040",
+      "title": "F.scaled_dot_product_attention (fast fused attention)",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/scaled_dot_product_attention_tutorial.html",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Loss functions",
+    "items": [
+     {
+      "id": "nn-041",
+      "title": "Regression: MSELoss, L1Loss, HuberLoss / SmoothL1Loss"
+     },
+     {
+      "id": "nn-042",
+      "title": "BCEWithLogitsLoss for binary and multi-label (takes raw logits)",
+      "code": "nn.BCEWithLogitsLoss(pos_weight=torch.tensor([3.0]))"
+     },
+     {
+      "id": "nn-043",
+      "title": "CrossEntropyLoss: logits in, class indices out; weight, label_smoothing, ignore_index",
+      "code": "nn.CrossEntropyLoss(label_smoothing=0.1)"
+     },
+     {
+      "id": "nn-044",
+      "title": "NLLLoss pairs with LogSoftmax"
+     },
+     {
+      "id": "nn-045",
+      "title": "reduction='none' for per-sample losses",
+      "code": "nn.CrossEntropyLoss(reduction=\"none\")"
+     },
+     {
+      "id": "nn-046",
+      "title": "Write a custom loss (e.g. Dice) as a function or nn.Module"
+     }
+    ]
+   },
+   {
+    "title": "torch.nn.functional",
+    "items": [
+     {
+      "id": "nn-047",
+      "title": "F.relu vs nn.ReLU: functional (stateless) vs module",
+      "code": "import torch.nn.functional as F"
+     },
+     {
+      "id": "nn-048",
+      "title": "F.interpolate to resize feature maps or masks",
+      "code": "F.interpolate(x, size=(128, 800), mode=\"bilinear\")"
+     },
+     {
+      "id": "nn-049",
+      "title": "F.one_hot and F.pad",
+      "code": "F.one_hot(labels, num_classes=4)"
+     }
+    ]
+   },
+   {
+    "title": "torch.nn.init",
+    "items": [
+     {
+      "id": "nn-050",
+      "title": "Know each layer's default initialisation",
+      "link": "https://docs.pytorch.org/docs/stable/nn.init.html"
+     },
+     {
+      "id": "nn-051",
+      "title": "kaiming_normal_ for ReLU nets, xavier_uniform_ for tanh/sigmoid",
+      "code": "nn.init.kaiming_normal_(layer.weight, nonlinearity=\"relu\")"
+     },
+     {
+      "id": "nn-052",
+      "title": "Initialise every layer with model.apply(fn)",
+      "code": "model.apply(init_weights)"
+     }
+    ]
+   },
+   {
+    "title": "torch.nn.utils and hooks",
+    "items": [
+     {
+      "id": "nn-053",
+      "title": "clip_grad_norm_",
+      "code": "nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)"
+     },
+     {
+      "id": "nn-054",
+      "title": "register_forward_hook to inspect intermediate activations",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced modules",
+    "items": [
+     {
+      "title": "Build multi-head attention from scratch, then check it against nn.MultiheadAttention",
+      "lv": "advanced",
+      "id": "nn-a01"
+     },
+     {
+      "title": "Weight tying: share the embedding and output layer weights",
+      "lv": "advanced",
+      "code": "self.head.weight = self.embed.weight",
+      "id": "nn-a02"
+     },
+     {
+      "title": "Parametrizations to constrain weights (orthogonal, spectral norm)",
+      "lv": "advanced",
+      "code": "parametrize.register_parametrization(layer, \"weight\", Symmetric())",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/parametrizations.html",
+      "id": "nn-a03"
+     },
+     {
+      "title": "FlexAttention for custom attention patterns",
+      "lv": "advanced",
+      "code": "from torch.nn.attention.flex_attention import flex_attention",
+      "id": "nn-a04"
+     },
+     {
+      "title": "Remap state_dict keys and load partial checkpoints safely",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/module_load_state_dict_tips.html",
+      "id": "nn-a05"
+     }
+    ]
+   }
+  ],
+  "id": "nn"
+ },
+ {
+  "order": 4,
+  "title": "torch.autograd",
+  "blurb": "How PyTorch computes gradients for you, and how to control it.",
+  "groups": [
+   {
+    "title": "Basics",
+    "items": [
+     {
+      "id": "autograd-001",
+      "title": "requires_grad=True and the computation graph",
+      "code": "x = torch.tensor(2.0, requires_grad=True)",
+      "link": "https://docs.pytorch.org/tutorials/beginner/basics/autogradqs_tutorial.html"
+     },
+     {
+      "id": "autograd-002",
+      "title": "backward() and reading .grad",
+      "code": "y = x ** 2; y.backward(); x.grad  # tensor(4.)"
+     },
+     {
+      "id": "autograd-003",
+      "title": "grad_fn: how each result remembers what created it",
+      "code": "y.grad_fn"
+     },
+     {
+      "id": "autograd-004",
+      "title": "Gradients accumulate: zero them every step",
+      "code": "optimizer.zero_grad(set_to_none=True)",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/zeroing_out_gradients.html"
+     }
+    ]
+   },
+   {
+    "title": "Leaf tensors and the graph",
+    "items": [
+     {
+      "id": "autograd-005",
+      "title": "Leaf vs non-leaf tensors; is_leaf and retain_grad()",
+      "link": "https://docs.pytorch.org/tutorials/beginner/understanding_leaf_vs_nonleaf_tutorial.html"
+     },
+     {
+      "id": "autograd-006",
+      "title": "backward() on a non-scalar needs a gradient argument",
+      "code": "y.backward(torch.ones_like(y))"
+     },
+     {
+      "id": "autograd-007",
+      "title": "retain_graph=True when calling backward twice",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Turning gradients off",
+    "items": [
+     {
+      "id": "autograd-008",
+      "title": "torch.no_grad() vs torch.inference_mode()",
+      "code": "with torch.inference_mode(): preds = model(X)"
+     },
+     {
+      "id": "autograd-009",
+      "title": ".detach() to cut a tensor from the graph",
+      "code": "running_loss += loss.detach().item()"
+     },
+     {
+      "id": "autograd-010",
+      "title": "requires_grad_(False) for frozen parameters"
+     }
+    ]
+   },
+   {
+    "title": "Going further",
+    "items": [
+     {
+      "id": "autograd-011",
+      "title": "torch.autograd.grad to get gradients directly",
+      "lv": "intermediate"
+     },
+     {
+      "id": "autograd-012",
+      "title": "Write a custom autograd.Function with forward and backward",
+      "link": "https://docs.pytorch.org/tutorials/beginner/examples_autograd/polynomial_custom_function.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "autograd-013",
+      "title": "Visualise gradient flow through a network",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/visualizing_gradients_tutorial.html",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced autograd",
+    "items": [
+     {
+      "title": "torch.func: grad and vmap",
+      "lv": "advanced",
+      "code": "from torch.func import grad, vmap",
+      "link": "https://docs.pytorch.org/tutorials/unstable/vmap_recipe.html",
+      "id": "autograd-a01"
+     },
+     {
+      "title": "Per-sample gradients",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/per_sample_grads.html",
+      "id": "autograd-a02"
+     },
+     {
+      "title": "Jacobians and Hessians",
+      "lv": "advanced",
+      "code": "torch.func.jacrev(f)(x)",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/jacobians_hessians.html",
+      "id": "autograd-a03"
+     },
+     {
+      "title": "Double backward for gradient penalties (e.g. WGAN-GP)",
+      "lv": "advanced",
+      "code": "torch.autograd.grad(out, x, create_graph=True)",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/custom_function_double_backward_tutorial.html",
+      "id": "autograd-a04"
+     },
+     {
+      "title": "Saved-tensor hooks to cut activation memory",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/autograd_saved_tensors_hooks_tutorial.html",
+      "id": "autograd-a05"
+     },
+     {
+      "title": "Forward-mode automatic differentiation",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/forward_ad_usage.html",
+      "id": "autograd-a06"
+     }
+    ]
+   }
+  ],
+  "id": "autograd"
+ },
+ {
+  "order": 5,
+  "title": "torch.optim",
+  "blurb": "Optimizers and learning-rate schedules: how parameters actually get updated.",
+  "groups": [
+   {
+    "title": "Optimizers",
+    "items": [
+     {
+      "id": "optim-001",
+      "title": "Create an optimizer over model.parameters(); what lr controls",
+      "code": "torch.optim.SGD(model.parameters(), lr=0.01)",
+      "link": "https://docs.pytorch.org/docs/stable/optim.html"
+     },
+     {
+      "id": "optim-002",
+      "title": "SGD with momentum and nesterov",
+      "code": "SGD(params, lr=0.01, momentum=0.9, nesterov=True)"
+     },
+     {
+      "id": "optim-003",
+      "title": "Adam: betas and eps",
+      "code": "torch.optim.Adam(params, lr=1e-3)"
+     },
+     {
+      "id": "optim-004",
+      "title": "AdamW and decoupled weight decay",
+      "code": "torch.optim.AdamW(params, lr=1e-3, weight_decay=1e-2)",
+      "note": "The usual default for transformers and fine-tuning."
+     },
+     {
+      "id": "optim-005",
+      "title": "RMSprop and Adagrad (know they exist)"
+     },
+     {
+      "id": "optim-006",
+      "title": "optimizer.state_dict(): why you save it with checkpoints"
+     }
+    ]
+   },
+   {
+    "title": "Parameter groups",
+    "items": [
+     {
+      "id": "optim-007",
+      "title": "Different learning rates per group (backbone vs head)",
+      "code": "AdamW([{\"params\": backbone.parameters(), \"lr\": 1e-4}, {\"params\": head.parameters(), \"lr\": 1e-3}])"
+     },
+     {
+      "id": "optim-008",
+      "title": "No weight decay on biases and norm layers",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Learning-rate schedulers",
+    "items": [
+     {
+      "id": "optim-009",
+      "title": "Where scheduler.step() goes: after optimizer.step(), per epoch or per batch"
+     },
+     {
+      "id": "optim-010",
+      "title": "StepLR and MultiStepLR",
+      "code": "StepLR(opt, step_size=10, gamma=0.1)"
+     },
+     {
+      "id": "optim-011",
+      "title": "CosineAnnealingLR",
+      "code": "CosineAnnealingLR(opt, T_max=epochs)"
+     },
+     {
+      "id": "optim-012",
+      "title": "OneCycleLR (stepped every batch)",
+      "code": "OneCycleLR(opt, max_lr=1e-2, total_steps=epochs * len(loader))"
+     },
+     {
+      "id": "optim-013",
+      "title": "ReduceLROnPlateau on validation loss",
+      "code": "sched.step(val_loss)"
+     },
+     {
+      "id": "optim-014",
+      "title": "Linear warmup with LinearLR + SequentialLR"
+     },
+     {
+      "id": "optim-015",
+      "title": "Read the current learning rate",
+      "code": "sched.get_last_lr()"
+     }
+    ]
+   },
+   {
+    "title": "Gradient tricks",
+    "items": [
+     {
+      "id": "optim-016",
+      "title": "Gradient clipping before optimizer.step()",
+      "code": "clip_grad_norm_(model.parameters(), 1.0)"
+     },
+     {
+      "id": "optim-017",
+      "title": "Gradient accumulation for a bigger effective batch",
+      "code": "(loss / accum_steps).backward(); step every accum_steps"
+     },
+     {
+      "id": "optim-018",
+      "title": "Learning-rate range test (LR finder)",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced optimisation",
+    "items": [
+     {
+      "title": "Exponential moving average (EMA) of weights",
+      "lv": "advanced",
+      "code": "AveragedModel(model, multi_avg_fn=get_ema_multi_avg_fn(0.999))",
+      "note": "Common in diffusion models and Kaggle solutions.",
+      "id": "optim-a01"
+     },
+     {
+      "title": "Stochastic Weight Averaging with swa_utils and SWALR",
+      "lv": "advanced",
+      "id": "optim-a02"
+     },
+     {
+      "title": "Write your own Optimizer subclass with a step() method",
+      "lv": "advanced",
+      "id": "optim-a03"
+     },
+     {
+      "title": "Compile the optimizer step",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/recipes/compiling_optimizer.html",
+      "id": "optim-a04"
+     },
+     {
+      "title": "Fuse the optimizer step into backward to save memory",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/optimizer_step_in_backward_tutorial.html",
+      "id": "optim-a05"
+     },
+     {
+      "title": "Shard optimizer state with ZeroRedundancyOptimizer",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/recipes/zero_redundancy_optimizer.html",
+      "id": "optim-a06"
+     }
+    ]
+   }
+  ],
+  "id": "optim"
+ },
+ {
+  "order": 6,
+  "title": "Training Loop",
+  "blurb": "Your course workflow notebook, step by step, then the habits that make training reliable.",
+  "groups": [
+   {
+    "title": "Setup (course notebook)",
+    "items": [
+     {
+      "id": "training-001",
+      "title": "Write the workflow from memory: data, model, loss + optimizer, train, evaluate, save/load",
+      "lv": "course"
+     },
+     {
+      "id": "training-002",
+      "title": "Create synthetic data with known weight and bias",
+      "code": "X = torch.arange(0, 1, 0.02).unsqueeze(1); y = 0.7 * X + 0.3",
+      "lv": "course"
+     },
+     {
+      "id": "training-003",
+      "title": "80/20 train-test split and plot_predictions()",
+      "code": "split = int(0.8 * len(X))",
+      "lv": "course"
+     },
+     {
+      "id": "training-004",
+      "title": "Build LinearRegressionModel with nn.Parameter, seed it, inspect its parameters",
+      "lv": "course"
+     },
+     {
+      "id": "training-005",
+      "title": "Write MAE and Huber loss by hand and compare with nn.L1Loss",
+      "lv": "course"
+     },
+     {
+      "id": "training-006",
+      "title": "Pick the loss for the task: regression L1/MSE, binary BCEWithLogits, multi-class CrossEntropy",
+      "lv": "course"
+     }
+    ]
+   },
+   {
+    "title": "The 5 training steps",
+    "items": [
+     {
+      "id": "training-007",
+      "title": "model.train()"
+     },
+     {
+      "id": "training-008",
+      "title": "Forward pass",
+      "code": "y_pred = model(X)"
+     },
+     {
+      "id": "training-009",
+      "title": "Compute the loss",
+      "code": "loss = loss_fn(y_pred, y)"
+     },
+     {
+      "id": "training-010",
+      "title": "Zero gradients",
+      "code": "optimizer.zero_grad()"
+     },
+     {
+      "id": "training-011",
+      "title": "Backpropagate",
+      "code": "loss.backward()"
+     },
+     {
+      "id": "training-012",
+      "title": "Update parameters",
+      "code": "optimizer.step()"
+     },
+     {
+      "id": "training-013",
+      "title": "Explain why the order matters",
+      "note": "Zeroing after backward() would erase this step's gradients."
+     }
+    ]
+   },
+   {
+    "title": "Epochs and batches",
+    "items": [
+     {
+      "id": "training-014",
+      "title": "Loop over DataLoader batches and move each batch to the device",
+      "code": "for X, y in loader: X, y = X.to(device), y.to(device)"
+     },
+     {
+      "id": "training-015",
+      "title": "Average loss per epoch, weighted by batch size",
+      "code": "total += loss.item() * X.size(0)"
+     },
+     {
+      "id": "training-016",
+      "title": "Track accuracy while training",
+      "code": "(logits.argmax(1) == y).float().mean()"
+     },
+     {
+      "id": "training-017",
+      "title": "Wrap it in a reusable train_step() function"
+     }
+    ]
+   },
+   {
+    "title": "Validation loop",
+    "items": [
+     {
+      "id": "training-018",
+      "title": "model.eval() + inference_mode() + validation loss"
+     },
+     {
+      "id": "training-019",
+      "title": "Write test_step() and a train() function that returns a results dict"
+     },
+     {
+      "id": "training-020",
+      "title": "Print progress every N epochs; add tqdm progress bars",
+      "code": "from tqdm.auto import tqdm"
+     }
+    ]
+   },
+   {
+    "title": "Tracking",
+    "items": [
+     {
+      "id": "training-021",
+      "title": "Plot train vs validation loss curves"
+     },
+     {
+      "id": "training-022",
+      "title": "Compare learned parameters with the true values (course notebook)",
+      "lv": "course"
+     },
+     {
+      "id": "training-023",
+      "title": "Log scalars to TensorBoard",
+      "code": "writer.add_scalar(\"loss/train\", loss, epoch)",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/tensorboard_with_pytorch.html"
+     }
+    ]
+   },
+   {
+    "title": "Making training reliable",
+    "items": [
+     {
+      "id": "training-024",
+      "title": "Early stopping with patience on validation loss"
+     },
+     {
+      "id": "training-025",
+      "title": "Save the best model by validation metric, not the last one"
+     },
+     {
+      "id": "training-026",
+      "title": "Mixed precision with torch.autocast and GradScaler",
+      "code": "with torch.autocast(device_type=\"cuda\", dtype=torch.float16): ...",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/amp_recipe.html"
+     },
+     {
+      "id": "training-027",
+      "title": "Resume training from a checkpoint"
+     },
+     {
+      "id": "training-028",
+      "title": "Handle a NaN loss: lower lr, clip gradients, check the data"
+     },
+     {
+      "id": "training-029",
+      "title": "Read the official 'Training with PyTorch' tutorial",
+      "link": "https://docs.pytorch.org/tutorials/beginner/introyt/trainingyt.html"
+     }
+    ]
+   },
+   {
+    "title": "Advanced training",
+    "items": [
+     {
+      "title": "Write a small Trainer class with callbacks (logging, checkpointing, early stopping)",
+      "lv": "advanced",
+      "id": "training-a01"
+     },
+     {
+      "title": "Combine bf16 autocast, torch.compile and fused AdamW in one loop",
+      "lv": "advanced",
+      "code": "AdamW(params, lr=3e-4, fused=True)",
+      "id": "training-a02"
+     },
+     {
+      "title": "Fine-tune a large pretrained model with LoRA (PEFT)",
+      "lv": "advanced",
+      "note": "Trains small adapter matrices instead of all weights.",
+      "id": "training-a03"
+     },
+     {
+      "title": "Contrastive self-supervised training loop (SimCLR-style)",
+      "lv": "advanced",
+      "id": "training-a04"
+     }
+    ]
+   }
+  ],
+  "id": "training"
+ },
+ {
+  "order": 7,
+  "title": "Architecture Design",
+  "blurb": "Choosing and building the right model for the data in front of you.",
+  "groups": [
+   {
+    "title": "Principles",
+    "items": [
+     {
+      "id": "architecture-001",
+      "title": "Start with the simplest baseline, then add complexity"
+     },
+     {
+      "id": "architecture-002",
+      "title": "Overfit a single batch to prove the model can learn",
+      "note": "If it can't reach ~0 loss on one batch, there's a bug."
+     },
+     {
+      "id": "architecture-003",
+      "title": "Reason about shapes layer by layer; print them in forward()",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/reasoning_about_shapes.html"
+     },
+     {
+      "id": "architecture-004",
+      "title": "Count parameters and check the model with torchinfo",
+      "code": "summary(model, input_size=(1, 3, 224, 224))"
+     },
+     {
+      "id": "architecture-005",
+      "title": "Match the output layer to the task",
+      "note": "Regression: 1 unit. Binary: 1 logit. Multi-class: C logits. Segmentation: C channels."
+     }
+    ]
+   },
+   {
+    "title": "MLPs",
+    "items": [
+     {
+      "id": "architecture-006",
+      "title": "Linear-ReLU stacks for tabular data; width vs depth"
+     },
+     {
+      "id": "architecture-007",
+      "title": "Where BatchNorm and Dropout go in an MLP"
+     }
+    ]
+   },
+   {
+    "title": "CNNs",
+    "items": [
+     {
+      "id": "architecture-008",
+      "title": "The Conv-ReLU-Pool block pattern"
+     },
+     {
+      "id": "architecture-009",
+      "title": "Build TinyVGG for FashionMNIST",
+      "link": "https://docs.pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html"
+     },
+     {
+      "id": "architecture-010",
+      "title": "Receptive field, and why stacked 3x3 convs beat one big kernel"
+     },
+     {
+      "id": "architecture-011",
+      "title": "Residual block with a skip connection (ResNet)",
+      "code": "out = F.relu(self.conv2(F.relu(self.conv1(x))) + x)"
+     },
+     {
+      "id": "architecture-012",
+      "title": "Global average pooling instead of a huge Linear head"
+     }
+    ]
+   },
+   {
+    "title": "Encoder-decoder and segmentation",
+    "items": [
+     {
+      "id": "architecture-013",
+      "title": "Encoder-decoder idea and U-Net skip connections"
+     },
+     {
+      "id": "architecture-014",
+      "title": "Output per-pixel logits shaped (N, C, H, W)"
+     }
+    ]
+   },
+   {
+    "title": "Sequence models",
+    "items": [
+     {
+      "id": "architecture-015",
+      "title": "LSTM or 1D-CNN classifier for sequences and signals"
+     },
+     {
+      "id": "architecture-016",
+      "title": "Transformer encoder block: attention + MLP + residuals + LayerNorm"
+     },
+     {
+      "id": "architecture-017",
+      "title": "Positional encodings",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Transfer learning",
+    "items": [
+     {
+      "id": "architecture-018",
+      "title": "Load a pretrained torchvision model with its weights and transforms",
+      "code": "weights = ResNet18_Weights.DEFAULT; model = resnet18(weights=weights); tf = weights.transforms()",
+      "link": "https://docs.pytorch.org/tutorials/beginner/transfer_learning_tutorial.html"
+     },
+     {
+      "id": "architecture-019",
+      "title": "Freeze the backbone and replace the head",
+      "code": "model.fc = nn.Linear(model.fc.in_features, num_classes)"
+     },
+     {
+      "id": "architecture-020",
+      "title": "Fine-tune: unfreeze later layers with a lower learning rate",
+      "link": "https://docs.pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html"
+     },
+     {
+      "id": "architecture-021",
+      "title": "Knowledge distillation: train a small model from a big one",
+      "link": "https://docs.pytorch.org/tutorials/beginner/knowledge_distillation_tutorial.html",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced architectures",
+    "items": [
+     {
+      "title": "Build a GPT-style decoder from scratch with a causal mask",
+      "lv": "advanced",
+      "code": "mask = torch.triu(torch.ones(T, T, dtype=torch.bool), diagonal=1)",
+      "id": "architecture-a01"
+     },
+     {
+      "title": "Vision Transformer: patch embedding + transformer encoder",
+      "lv": "advanced",
+      "code": "nn.Conv2d(3, d_model, kernel_size=16, stride=16)  # patchify",
+      "id": "architecture-a02"
+     },
+     {
+      "title": "Variational autoencoder and the reparameterisation trick",
+      "lv": "advanced",
+      "code": "z = mu + torch.exp(0.5 * logvar) * torch.randn_like(mu)",
+      "id": "architecture-a03"
+     },
+     {
+      "title": "GAN training loop: alternating generator and discriminator steps",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/beginner/dcgan_faces_tutorial.html",
+      "id": "architecture-a04"
+     },
+     {
+      "title": "Diffusion model basics: noise schedule, U-Net denoiser, sampling loop",
+      "lv": "advanced",
+      "id": "architecture-a05"
+     },
+     {
+      "title": "Model ensembling with torch.func.stack_module_state",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/ensembling.html",
+      "id": "architecture-a06"
+     }
+    ]
+   }
+  ],
+  "id": "architecture"
+ },
+ {
+  "order": 8,
+  "title": "Evaluation and Tuning",
+  "blurb": "Measuring whether the model is good, and making it better.",
+  "groups": [
+   {
+    "title": "Metrics",
+    "items": [
+     {
+      "id": "evaluation-001",
+      "title": "Regression: MAE, MSE, RMSE, R²"
+     },
+     {
+      "id": "evaluation-002",
+      "title": "Accuracy, and why it misleads on imbalanced data"
+     },
+     {
+      "id": "evaluation-003",
+      "title": "Precision, recall and F1"
+     },
+     {
+      "id": "evaluation-004",
+      "title": "Confusion matrix"
+     },
+     {
+      "id": "evaluation-005",
+      "title": "ROC-AUC and PR-AUC"
+     },
+     {
+      "id": "evaluation-006",
+      "title": "Segmentation: Dice and IoU",
+      "code": "dice = 2 * (p * t).sum() / (p.sum() + t.sum() + 1e-7)"
+     },
+     {
+      "id": "evaluation-007",
+      "title": "Compute metrics correctly across batches with torchmetrics",
+      "code": "torchmetrics.Accuracy(task=\"multiclass\", num_classes=10)"
+     }
+    ]
+   },
+   {
+    "title": "Diagnosing models",
+    "items": [
+     {
+      "id": "evaluation-008",
+      "title": "Read learning curves: underfitting vs overfitting"
+     },
+     {
+      "id": "evaluation-009",
+      "title": "Error analysis: look at the worst predictions"
+     },
+     {
+      "id": "evaluation-010",
+      "title": "Check for data leakage between train and validation"
+     },
+     {
+      "id": "evaluation-011",
+      "title": "Always compare against a trivial baseline (mean, most frequent, empty mask)"
+     }
+    ]
+   },
+   {
+    "title": "Regularisation",
+    "items": [
+     {
+      "id": "evaluation-012",
+      "title": "Weight decay"
+     },
+     {
+      "id": "evaluation-013",
+      "title": "Dropout"
+     },
+     {
+      "id": "evaluation-014",
+      "title": "Data augmentation"
+     },
+     {
+      "id": "evaluation-015",
+      "title": "Label smoothing"
+     },
+     {
+      "id": "evaluation-016",
+      "title": "Early stopping"
+     }
+    ]
+   },
+   {
+    "title": "Hyperparameter tuning",
+    "items": [
+     {
+      "id": "evaluation-017",
+      "title": "Tune in order: learning rate, batch size, weight decay, then architecture"
+     },
+     {
+      "id": "evaluation-018",
+      "title": "Random search beats grid search"
+     },
+     {
+      "id": "evaluation-019",
+      "title": "Automate search with Optuna or Ray Tune",
+      "link": "https://docs.pytorch.org/tutorials/beginner/hyperparameter_tuning_tutorial.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "evaluation-020",
+      "title": "K-fold cross-validation for small datasets"
+     }
+    ]
+   },
+   {
+    "title": "Imbalanced data",
+    "items": [
+     {
+      "id": "evaluation-021",
+      "title": "Class weights in the loss",
+      "code": "nn.CrossEntropyLoss(weight=class_weights)"
+     },
+     {
+      "id": "evaluation-022",
+      "title": "Oversample with WeightedRandomSampler"
+     },
+     {
+      "id": "evaluation-023",
+      "title": "Tune the decision threshold on the validation set"
+     },
+     {
+      "id": "evaluation-024",
+      "title": "Focal loss",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced evaluation",
+    "items": [
+     {
+      "title": "Calibration: temperature scaling and reliability diagrams",
+      "lv": "advanced",
+      "id": "evaluation-a01"
+     },
+     {
+      "title": "Bootstrap confidence intervals for a metric",
+      "lv": "advanced",
+      "id": "evaluation-a02"
+     },
+     {
+      "title": "Ablation studies: change one thing at a time and log it",
+      "lv": "advanced",
+      "id": "evaluation-a03"
+     }
+    ]
+   }
+  ],
+  "id": "evaluation"
+ },
+ {
+  "order": 9,
+  "title": "Saving, Loading and Inference",
+  "blurb": "Keeping trained models and using them to make predictions.",
+  "groups": [
+   {
+    "title": "Saving and loading",
+    "items": [
+     {
+      "id": "inference-001",
+      "title": "What a state_dict is",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/what_is_state_dict.html"
+     },
+     {
+      "id": "inference-002",
+      "title": "Save the state_dict with pathlib and a descriptive file name",
+      "code": "torch.save(model.state_dict(), MODELS / \"unet_v1_dice0.62.pth\")",
+      "link": "https://docs.pytorch.org/tutorials/beginner/saving_loading_models.html"
+     },
+     {
+      "id": "inference-003",
+      "title": "Load with weights_only=True into a fresh model",
+      "code": "model.load_state_dict(torch.load(path, weights_only=True))"
+     },
+     {
+      "id": "inference-004",
+      "title": "General checkpoint: model, optimizer, scheduler, epoch, best metric",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/saving_and_loading_a_general_checkpoint.html"
+     },
+     {
+      "id": "inference-005",
+      "title": "Save on GPU, load on CPU with map_location",
+      "code": "torch.load(path, map_location=\"cpu\", weights_only=True)",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/save_load_across_devices.html"
+     },
+     {
+      "id": "inference-006",
+      "title": "strict=False and warm-starting from a different model",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/warmstarting_model_using_parameters_from_a_different_model.html"
+     },
+     {
+      "id": "inference-007",
+      "title": "Why not torch.save(model) (pickling the whole model)"
+     }
+    ]
+   },
+   {
+    "title": "Making predictions",
+    "items": [
+     {
+      "id": "inference-008",
+      "title": "model.eval() + inference_mode(), every time"
+     },
+     {
+      "id": "inference-009",
+      "title": "Single-sample inference: add the batch dimension",
+      "code": "model(img.unsqueeze(0).to(device))"
+     },
+     {
+      "id": "inference-010",
+      "title": "Use exactly the same preprocessing as training"
+     },
+     {
+      "id": "inference-011",
+      "title": "Logits to probabilities to labels",
+      "code": "probs = logits.softmax(1); labels = probs.argmax(1)"
+     },
+     {
+      "id": "inference-012",
+      "title": "Batched inference over a test DataLoader; join with torch.cat"
+     },
+     {
+      "id": "inference-013",
+      "title": "Write predictions to submission.csv"
+     },
+     {
+      "id": "inference-014",
+      "title": "Test-time augmentation (average predictions over flips)",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Shipping a model",
+    "items": [
+     {
+      "id": "inference-015",
+      "title": "Write inference.py that loads a checkpoint and predicts from the command line"
+     },
+     {
+      "id": "inference-016",
+      "title": "torch.export for a portable model graph",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/torch_export_tutorial.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "inference-017",
+      "title": "Export to ONNX",
+      "link": "https://docs.pytorch.org/tutorials/beginner/onnx/export_simple_model_to_onnx_tutorial.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "inference-018",
+      "title": "Serve predictions behind a small FastAPI endpoint",
+      "lv": "intermediate"
+     },
+     {
+      "id": "inference-019",
+      "title": "Quantization basics for smaller, faster models",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced deployment",
+    "items": [
+     {
+      "title": "AOTInductor: compile an exported model ahead of time",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/recipes/torch_export_aoti_python.html",
+      "id": "inference-a01"
+     },
+     {
+      "title": "Weight-only int8/int4 quantization with torchao",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/unstable/gpu_quantization_torchao_tutorial.html",
+      "id": "inference-a02"
+     },
+     {
+      "title": "Pruning",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/pruning_tutorial.html",
+      "id": "inference-a03"
+     },
+     {
+      "title": "Run an ONNX model with ONNX Runtime or TensorRT",
+      "lv": "advanced",
+      "id": "inference-a04"
+     },
+     {
+      "title": "KV caching for fast autoregressive generation",
+      "lv": "advanced",
+      "id": "inference-a05"
+     }
+    ]
+   }
+  ],
+  "id": "inference"
+ },
+ {
+  "order": 10,
+  "title": "Reproducibility and Debugging",
+  "blurb": "Getting the same result twice, and finding out why things break.",
+  "groups": [
+   {
+    "title": "Reproducibility",
+    "items": [
+     {
+      "id": "repro-001",
+      "title": "A set_seed() helper for torch, NumPy, random and CUDA",
+      "code": "torch.manual_seed(s); np.random.seed(s); random.seed(s); torch.cuda.manual_seed_all(s)",
+      "link": "https://docs.pytorch.org/docs/stable/notes/randomness.html"
+     },
+     {
+      "id": "repro-002",
+      "title": "Deterministic algorithms",
+      "code": "torch.use_deterministic_algorithms(True)"
+     },
+     {
+      "id": "repro-003",
+      "title": "cudnn.benchmark vs cudnn.deterministic trade-off"
+     },
+     {
+      "id": "repro-004",
+      "title": "Seed DataLoader shuffling and workers"
+     },
+     {
+      "id": "repro-005",
+      "title": "Save split indices so every run uses the same split"
+     },
+     {
+      "id": "repro-006",
+      "title": "Record versions in requirements.txt",
+      "code": "pip freeze > requirements.txt"
+     },
+     {
+      "id": "repro-007",
+      "title": "Keep hyperparameters in one config and save it with the checkpoint"
+     }
+    ]
+   },
+   {
+    "title": "Debugging",
+    "items": [
+     {
+      "id": "repro-008",
+      "title": "Shape errors: print shapes at each layer"
+     },
+     {
+      "id": "repro-009",
+      "title": "dtype errors: Long vs Float targets"
+     },
+     {
+      "id": "repro-010",
+      "title": "Device errors: model and every tensor on the same device"
+     },
+     {
+      "id": "repro-011",
+      "title": "Find NaN/Inf sources",
+      "code": "torch.autograd.set_detect_anomaly(True); torch.isnan(x).any()"
+     },
+     {
+      "id": "repro-012",
+      "title": "Loss not going down: check lr, zero_grad, train/eval mode, labels, data"
+     },
+     {
+      "id": "repro-013",
+      "title": "Check gradients flow: print each parameter's grad norm"
+     },
+     {
+      "id": "repro-014",
+      "title": "CUDA out of memory: smaller batch, mixed precision, fewer workers"
+     }
+    ]
+   },
+   {
+    "title": "Profiling",
+    "items": [
+     {
+      "id": "repro-015",
+      "title": "Time code properly with torch.utils.benchmark",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/timer_quick_start.html"
+     },
+     {
+      "id": "repro-016",
+      "title": "Find bottlenecks with the PyTorch Profiler",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/profiler_recipe.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "repro-017",
+      "title": "Watch GPU use with nvidia-smi"
+     }
+    ]
+   },
+   {
+    "title": "Advanced debugging",
+    "items": [
+     {
+      "title": "GPU memory snapshots to find what's using memory",
+      "lv": "advanced",
+      "code": "torch.cuda.memory._record_memory_history()",
+      "link": "https://docs.pytorch.org/tutorials/beginner/mosaic_memory_profiling_tutorial.html",
+      "id": "repro-a01"
+     },
+     {
+      "title": "Holistic Trace Analysis of profiler traces",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/beginner/hta_intro_tutorial.html",
+      "id": "repro-a02"
+     },
+     {
+      "title": "Find torch.compile graph breaks with TORCH_LOGS",
+      "lv": "advanced",
+      "code": "TORCH_LOGS=\"graph_breaks\" python train.py",
+      "link": "https://docs.pytorch.org/tutorials/recipes/torch_logs.html",
+      "id": "repro-a03"
+     },
+     {
+      "title": "Debug hung distributed jobs with Flight Recorder",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/debug_hangs_with_flight_recorder.html",
+      "id": "repro-a04"
+     }
+    ]
+   }
+  ],
+  "id": "repro"
+ },
+ {
+  "order": 11,
+  "title": "Performance and Scale",
+  "blurb": "Industry-level speed and multi-GPU training. Learn after the core stages feel easy.",
+  "groups": [
+   {
+    "title": "Single GPU speed",
+    "items": [
+     {
+      "id": "performance-001",
+      "title": "Mixed precision: float16 vs bfloat16",
+      "link": "https://docs.pytorch.org/docs/stable/amp.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "performance-002",
+      "title": "torch.compile and its modes",
+      "code": "torch.compile(model, mode=\"reduce-overhead\")",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/torch_compile_tutorial.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "performance-003",
+      "title": "channels_last memory format for CNNs",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/memory_format_tutorial.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "performance-004",
+      "title": "Gradient checkpointing to trade compute for memory",
+      "code": "torch.utils.checkpoint.checkpoint(block, x)",
+      "lv": "intermediate"
+     },
+     {
+      "id": "performance-005",
+      "title": "Work through the Performance Tuning Guide",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/tuning_guide.html",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Multiple GPUs",
+    "items": [
+     {
+      "id": "performance-006",
+      "title": "What Distributed Data Parallel is and why it beats DataParallel",
+      "link": "https://docs.pytorch.org/tutorials/beginner/ddp_series_theory.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "performance-007",
+      "title": "Multi-GPU training with DDP and torchrun",
+      "link": "https://docs.pytorch.org/tutorials/beginner/ddp_series_multigpu.html",
+      "lv": "intermediate"
+     },
+     {
+      "id": "performance-008",
+      "title": "FSDP for models too big for one GPU (awareness)",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/FSDP_tutorial.html",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced performance",
+    "items": [
+     {
+      "title": "CUDA graphs (what mode=\"reduce-overhead\" uses)",
+      "lv": "advanced",
+      "id": "performance-a01"
+     },
+     {
+      "title": "Regional compilation to cut torch.compile start-up time",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/recipes/regional_compilation.html",
+      "id": "performance-a02"
+     },
+     {
+      "title": "Custom Python operators with torch.library",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/advanced/python_custom_ops.html",
+      "id": "performance-a03"
+     },
+     {
+      "title": "Use a custom Triton kernel inside torch.compile",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/recipes/torch_compile_user_defined_triton_kernel_tutorial.html",
+      "id": "performance-a04"
+     },
+     {
+      "title": "Custom C++ and CUDA operators",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/advanced/cpp_custom_ops.html",
+      "id": "performance-a05"
+     }
+    ]
+   },
+   {
+    "title": "Advanced distributed training",
+    "items": [
+     {
+      "title": "FSDP2 hands-on training",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/FSDP_advanced_tutorial.html",
+      "id": "performance-a06"
+     },
+     {
+      "title": "Tensor Parallel for large transformers",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/TP_tutorial.html",
+      "id": "performance-a07"
+     },
+     {
+      "title": "DeviceMesh to describe multi-dimensional parallelism",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/recipes/distributed_device_mesh.html",
+      "id": "performance-a08"
+     },
+     {
+      "title": "Multi-node training with torchrun",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/ddp_series_multinode.html",
+      "id": "performance-a09"
+     },
+     {
+      "title": "Fault-tolerant (elastic) training with torchrun",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/beginner/ddp_series_fault_tolerance.html",
+      "id": "performance-a10"
+     },
+     {
+      "title": "Distributed Checkpoint (DCP)",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/recipes/distributed_checkpoint_recipe.html",
+      "id": "performance-a11"
+     }
+    ]
+   }
+  ],
+  "id": "performance"
+ },
+ {
+  "order": 12,
+  "title": "Ecosystem and Industry Tools",
+  "blurb": "The libraries people use around PyTorch at work.",
+  "groups": [
+   {
+    "title": "Models and metrics",
+    "items": [
+     {
+      "id": "ecosystem-001",
+      "title": "torchvision models and the weights API",
+      "link": "https://docs.pytorch.org/vision/stable/models.html"
+     },
+     {
+      "id": "ecosystem-002",
+      "title": "timm for hundreds of pretrained image models",
+      "code": "timm.create_model(\"resnet50\", pretrained=True, num_classes=4)"
+     },
+     {
+      "id": "ecosystem-003",
+      "title": "segmentation_models_pytorch for U-Net and friends",
+      "code": "smp.Unet(\"resnet34\", encoder_weights=\"imagenet\", classes=4)"
+     },
+     {
+      "id": "ecosystem-004",
+      "title": "torchmetrics"
+     },
+     {
+      "id": "ecosystem-005",
+      "title": "Hugging Face transformers and datasets",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Experiment tracking",
+    "items": [
+     {
+      "id": "ecosystem-006",
+      "title": "TensorBoard",
+      "link": "https://docs.pytorch.org/tutorials/intermediate/tensorboard_tutorial.html"
+     },
+     {
+      "id": "ecosystem-007",
+      "title": "Weights & Biases"
+     }
+    ]
+   },
+   {
+    "title": "Structure and frameworks",
+    "items": [
+     {
+      "id": "ecosystem-008",
+      "title": "Turn the notebook into src/train.py, src/inference.py and src/utils.py"
+     },
+     {
+      "id": "ecosystem-009",
+      "title": "argparse (or a YAML config) for hyperparameters"
+     },
+     {
+      "id": "ecosystem-010",
+      "title": "Unit-test a model: output shapes and an overfit-one-batch test"
+     },
+     {
+      "id": "ecosystem-011",
+      "title": "PyTorch Lightning, once you can write the loop yourself",
+      "lv": "intermediate"
+     },
+     {
+      "id": "ecosystem-012",
+      "title": "Model interpretability with Captum",
+      "link": "https://docs.pytorch.org/tutorials/recipes/recipes/Captum_Recipe.html",
+      "lv": "intermediate"
+     }
+    ]
+   },
+   {
+    "title": "Advanced tools",
+    "items": [
+     {
+      "title": "Hugging Face Accelerate for multi-GPU with little code change",
+      "lv": "advanced",
+      "id": "ecosystem-a01"
+     },
+     {
+      "title": "DeepSpeed ZeRO stages (awareness)",
+      "lv": "advanced",
+      "id": "ecosystem-a02"
+     },
+     {
+      "title": "Scale training with Ray Train",
+      "lv": "advanced",
+      "link": "https://docs.pytorch.org/tutorials/beginner/distributed_training_with_ray_tutorial.html",
+      "id": "ecosystem-a03"
+     },
+     {
+      "title": "Serve LLMs efficiently with vLLM (awareness)",
+      "lv": "advanced",
+      "id": "ecosystem-a04"
+     }
+    ]
+   }
+  ],
+  "id": "ecosystem"
+ },
+ {
+  "order": 13,
+  "title": "Applied: SurfaceGuard Segmentation",
+  "blurb": "Your Kaggle competition, from the 0.3 baseline to a real score.",
+  "groups": [
+   {
+    "title": "Data",
+    "items": [
+     {
+      "id": "surfaceguard-001",
+      "title": "Decode mask_rle into a 128 x 800 mask (column-major, 1-indexed)",
+      "code": "mask.reshape(width, height).T"
+     },
+     {
+      "id": "surfaceguard-002",
+      "title": "Encode a mask back to RLE and check the round trip"
+     },
+     {
+      "id": "surfaceguard-003",
+      "title": "Custom Dataset: one .jpg plus 4 masks (one per defect type)"
+     },
+     {
+      "id": "surfaceguard-004",
+      "title": "Plot images with their masks overlaid"
+     },
+     {
+      "id": "surfaceguard-005",
+      "title": "Augment image and mask together"
+     }
+    ]
+   },
+   {
+    "title": "Model",
+    "items": [
+     {
+      "id": "surfaceguard-006",
+      "title": "Build a tiny U-Net: encoder, decoder, skip connections"
+     },
+     {
+      "id": "surfaceguard-007",
+      "title": "Loss: BCEWithLogits + Dice"
+     },
+     {
+      "id": "surfaceguard-008",
+      "title": "Overfit a tiny subset first to prove the pipeline works"
+     },
+     {
+      "id": "surfaceguard-009",
+      "title": "Try a pretrained encoder with segmentation_models_pytorch"
+     }
+    ]
+   },
+   {
+    "title": "Submission",
+    "items": [
+     {
+      "id": "surfaceguard-010",
+      "title": "Rebuild the competition metric locally (70% Dice, 20% false positives, 10% empty)"
+     },
+     {
+      "id": "surfaceguard-011",
+      "title": "Threshold probabilities and drop tiny blobs to cut false positives"
+     },
+     {
+      "id": "surfaceguard-012",
+      "title": "Predict on test and write submission.csv (empty mask = \" \")"
+     }
+    ]
+   }
+  ],
+  "id": "surfaceguard"
+ }
+];
+window.PP_INITIAL = {"done": {}, "notes": {}};
+</script>
+<script>
+(function(){
+  var TAGS = {core:"Core", course:"Course notebook", intermediate:"Intermediate", advanced:"Advanced"};
+  var MONO = {data:1, nn:1, autograd:1, optim:1};
+  var host = document.getElementById("stages");
+  var sections = window.PP_SECTIONS || [];
+  var LS_KEY = "pytorch-path-v1";
+  var state = (function(){
+    try { var r = localStorage.getItem(LS_KEY); if(r){ var p = JSON.parse(r); return {done:p.done||{}, notes:p.notes||{}}; } } catch(e){}
+    return JSON.parse(JSON.stringify(window.PP_INITIAL || {done:{}, notes:{}}));
+  })();
+  var progressRef = null, showInt = true, showAdv = true;
+  var saving = false, dirty = false, saveTimer = null, noteTimer = null;
+
+  function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  function el(tag, cls, text){ var e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+  function setStatus(t){ document.getElementById("status").textContent = t; }
+  function counts(item){
+    if(item.lv === "intermediate") return showInt;
+    if(item.lv === "advanced") return showAdv;
+    return true;
+  }
+
+  /* ---------- Build ---------- */
+  function build(){
+    var openIds = {};
+    host.querySelectorAll("details.stage").forEach(function(d){ if(d.open) openIds[d.id]=1; });
+    var hadDom = host.children.length > 0;
+    host.textContent = "";
+    if(!sections.length){ host.appendChild(el("div","empty","No stages yet. Ask Claude to add the next set of PyTorch topics and they will show up here.")); return; }
+    sections.forEach(function(S, si){
+      var d = el("details","stage"); d.id = "st-" + S.id;
+      if(openIds[d.id]) d.open = true;
+      var sum = el("summary");
+      sum.appendChild(el("span","num","Stage " + String(si+1).padStart(2,"0")));
+      var h = el("h2"); if(MONO[S.id]) h.appendChild(el("span","mono",S.title)); else h.textContent = S.title;
+      sum.appendChild(h);
+      var cnt = el("span","count"); cnt.setAttribute("data-count",""); sum.appendChild(cnt);
+      var mb = el("span","minibar"); var mi = el("i"); mi.setAttribute("data-mini",""); mb.appendChild(mi); sum.appendChild(mb);
+      d.appendChild(sum);
+      if(S.blurb) d.appendChild(el("p","blurb",S.blurb));
+      (S.groups||[]).forEach(function(G){
+        var g = el("div","group");
+        var gh = el("div","group-head"); gh.appendChild(el("h3",null,G.title)); var gc = el("span","gcount"); gc.setAttribute("data-gcount",""); gh.appendChild(gc);
+        g.appendChild(gh);
+        var ul = el("ul","items");
+        (G.items||[]).forEach(function(it){
+          var li = el("li","item"); li.setAttribute("data-key", it.id); if(it.lv) li.setAttribute("data-lv", it.lv);
+          var cb = el("input"); cb.type = "checkbox"; cb.id = "c-" + it.id;
+          li.appendChild(cb);
+          var body = el("div","body");
+          var lab = el("label"); lab.htmlFor = cb.id;
+          var t = el("span","t"); var lv = it.lv || "core";
+          t.appendChild(el("span","tag " + lv, TAGS[lv] || lv)); t.appendChild(document.createTextNode(it.title||""));
+          lab.appendChild(t); body.appendChild(lab);
+          if(it.note) body.appendChild(el("span","note",it.note));
+          if(it.code) body.appendChild(el("code","code",it.code));
+          if(it.link && /^https:\/\//.test(it.link)){ var a = el("a","ref","Read on pytorch.org ↗"); a.href = it.link; a.target = "_blank"; a.rel = "noopener"; body.appendChild(a); }
+          li.appendChild(body);
+          ul.appendChild(li);
+        });
+        g.appendChild(ul);
+        d.appendChild(g);
+      });
+      var nw = el("div","notes");
+      var nl = el("label",null,"Where I got stuck"); nl.htmlFor = "n-" + S.id;
+      var ta = el("textarea"); ta.id = "n-" + S.id; ta.placeholder = "e.g. forgot that view() needs a contiguous tensor";
+      nw.appendChild(nl); nw.appendChild(ta); d.appendChild(nw);
+      host.appendChild(d);
+    });
+    update();
+    if(!hadDom){
+      var first = sections.find(function(S){ var c = stageCounts(S); return c.d < c.n; });
+      if(first) document.getElementById("st-" + first.id).open = true;
+    }
+  }
+
+  function stageCounts(S){
+    var n=0, d=0;
+    (S.groups||[]).forEach(function(G){ (G.items||[]).forEach(function(it){ if(!counts(it)) return; n++; if(state.done[it.id]) d++; }); });
+    return {n:n, d:d};
+  }
+
+  /* ---------- Update ---------- */
+  function update(){
+    var tot=0, dn=0, next=null;
+    sections.forEach(function(S, si){
+      var sd = document.getElementById("st-" + S.id); if(!sd) return;
+      var n=0, d=0;
+      (S.groups||[]).forEach(function(G, gi){
+        var gn=0, gd=0;
+        (G.items||[]).forEach(function(it){
+          var li = sd.querySelector('[data-key="' + it.id + '"]'); if(!li) return;
+          var on = !!state.done[it.id], inc = counts(it);
+          li.classList.toggle("done", on);
+          li.hidden = !inc;
+          li.querySelector("input").checked = on;
+          if(inc){ gn++; n++; if(on){ gd++; d++; } else if(!next) next = {S:S, si:si, title:G.title}; }
+        });
+        var gEl = sd.querySelectorAll(".group")[gi];
+        if(gEl){ gEl.querySelector("[data-gcount]").textContent = gd + " / " + gn; gEl.classList.toggle("complete", gn>0 && gd===gn); gEl.hidden = gn===0; }
+      });
+      tot+=n; dn+=d;
+      sd.querySelector("[data-count]").textContent = d + " / " + n;
+      sd.querySelector("[data-mini]").style.width = (n ? d/n*100 : 0) + "%";
+      sd.classList.toggle("complete", n>0 && d===n);
+      var ta = document.getElementById("n-" + S.id);
+      if(ta && document.activeElement !== ta) ta.value = state.notes[S.id] || "";
+    });
+    var pct = tot ? Math.round(dn/tot*100) : 0;
+    document.getElementById("ov-num").textContent = dn + " / " + tot;
+    document.getElementById("ov-pct").textContent = pct + "%";
+    document.getElementById("ov-bar").style.width = pct + "%";
+    var nx = document.getElementById("next"); nx.textContent = "";
+    if(next){
+      nx.appendChild(document.createTextNode("Next up: "));
+      var a = el("a", null, "Stage " + String(next.si+1).padStart(2,"0") + " · " + next.S.title + " → " + next.title);
+      a.href = "#st-" + next.S.id; a.setAttribute("data-jump", "st-" + next.S.id);
+      nx.appendChild(a);
+    } else if(tot){ nx.textContent = "Everything done. Time to build your own project."; }
+  }
+
+  /* ---------- Saving (this browser) ---------- */
+  function scheduleSave(){
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); setStatus("Saved."); }
+    catch(e){ setStatus("This browser blocked saving. Use Export progress before you close the tab."); }
+  }
+
+  /* ---------- Events ---------- */
+  host.addEventListener("change", function(e){
+    var li = e.target.closest(".item"); if(!li || e.target.type !== "checkbox") return;
+    var k = li.getAttribute("data-key");
+    if(e.target.checked) state.done[k] = true; else delete state.done[k];
+    update(); scheduleSave();
+  });
+  host.addEventListener("input", function(e){
+    if(e.target.tagName !== "TEXTAREA") return;
+    var id = e.target.id.slice(2), v = e.target.value;
+    if(v) state.notes[id] = v; else delete state.notes[id];
+    clearTimeout(noteTimer); noteTimer = setTimeout(scheduleSave, 700);
+  });
+  var hideBtn = document.getElementById("btn-hide");
+  hideBtn.addEventListener("click", function(){
+    var on = hideBtn.getAttribute("aria-pressed") !== "true";
+    hideBtn.setAttribute("aria-pressed", String(on));
+    document.body.classList.toggle("hide-done", on);
+    lsSet("pp-hide", on ? "1" : "");
+  });
+  var intBtn = document.getElementById("btn-int"), advBtn = document.getElementById("btn-adv");
+  function levelToggle(btn, key){
+    btn.addEventListener("click", function(){
+      var on = btn.getAttribute("aria-pressed") !== "true";
+      btn.setAttribute("aria-pressed", String(on));
+      if(key === "int") showInt = on; else showAdv = on;
+      lsSet("pp-hide-" + key, on ? "" : "1");
+      update();
+    });
+  }
+  levelToggle(intBtn, "int"); levelToggle(advBtn, "adv");
+  var expBtn = document.getElementById("btn-expand");
+  expBtn.addEventListener("click", function(){
+    var all = [].slice.call(document.querySelectorAll(".stage"));
+    var open = !all.every(function(d){ return d.open; });
+    all.forEach(function(d){ d.open = open; });
+    expBtn.textContent = open ? "Collapse all" : "Expand all";
+  });
+  document.getElementById("next").addEventListener("click", function(e){
+    var a = e.target.closest("[data-jump]"); if(!a) return;
+    var d = document.getElementById(a.getAttribute("data-jump")); if(d) d.open = true;
+  });
+  if(lsGet("pp-hide")) hideBtn.click();
+  if(lsGet("pp-hide-int")) intBtn.click();
+  if(lsGet("pp-hide-adv")) advBtn.click();
+
+  /* ---------- Backup ---------- */
+  document.getElementById("btn-export").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(state, null, 2)], {type: "application/json"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "pytorch-path-progress.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  });
+  document.getElementById("file-import").addEventListener("change", function(e){
+    var f = e.target.files && e.target.files[0]; if(!f) return;
+    var r = new FileReader();
+    r.onload = function(){
+      try {
+        var p = JSON.parse(r.result);
+        state = {done: p.done || {}, notes: p.notes || {}};
+        update(); scheduleSave(); setStatus("Progress imported.");
+      } catch(err){ setStatus("That file isn't a PyTorch Path progress export."); }
+      e.target.value = "";
+    };
+    r.readAsText(f);
+  });
+
+  build();
+  setStatus("Saved.");
+})();
+</script>
+
+</body>
+</html>
