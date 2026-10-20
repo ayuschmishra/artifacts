@@ -1,10 +1,11 @@
-// Paste the config from Firebase console → Project settings → Your apps → Web app → "SDK setup and configuration" (Config).
+// Firebase web config for project "artifacts" (artifacts-8f8d0).
 // These values are NOT secret: they identify your project. Security comes from firestore.rules.
 export const firebaseConfig = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
-  projectId: "PASTE_PROJECT_ID",
-  storageBucket: "PASTE_PROJECT_ID.firebasestorage.app",
-  messagingSenderId: "PASTE_SENDER_ID",
-  appId: "PASTE_APP_ID"
+  apiKey: "AIzaSyDzirU1i-B5u_ywW8nUrqu1RKhdPkfiVPA",
+  authDomain: "artifacts-8f8d0.firebaseapp.com",
+  projectId: "artifacts-8f8d0",
+  storageBucket: "artifacts-8f8d0.firebasestorage.app",
+  messagingSenderId: "287925425742",
+  appId: "1:287925425742:web:d60c1d6beea838ed2c551f",
+  measurementId: "G-YCJEPX0KB0"
 };
