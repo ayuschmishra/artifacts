@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="../assets/sync.js"></script>
+<title>JavaScript Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow reading column; sticky progress header; one collapsible block per lecture; items are tick rows. */
+:root{
+  --bg:#f6f5f0; --surface:#ffffff; --fg:#1d1c19; --muted:#6b675c; --line:#e3e0d5;
+  --accent:#2f3a8f; --accent-soft:#e6e8f6; --js:#f7df1e; --js-ink:#2b2600;
+  --ok:#2f7d4f; --ok-soft:#e3f2e8; --pq:#8a4b0f; --pq-soft:#fbeedd; --hw:#5c3a8a; --hw-soft:#efe7f8;
+  --code-bg:#f0eee6;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15161b; --surface:#1d1f26; --fg:#ecebe6; --muted:#a19e93; --line:#2e313b;
+  --accent:#9fa9f2; --accent-soft:#262a45; --js:#f7df1e; --js-ink:#2b2600;
+  --ok:#7fd3a0; --ok-soft:#1e3328; --pq:#f2b46d; --pq-soft:#3a2a17; --hw:#c9a8f2; --hw-soft:#2e2440;
+  --code-bg:#262832; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#15161b; --surface:#1d1f26; --fg:#ecebe6; --muted:#a19e93; --line:#2e313b;
+  --accent:#9fa9f2; --accent-soft:#262a45; --js:#f7df1e; --js-ink:#2b2600;
+  --ok:#7fd3a0; --ok-soft:#1e3328; --pq:#f2b46d; --pq-soft:#3a2a17; --hw:#c9a8f2; --hw-soft:#2e2440;
+  --code-bg:#262832; color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-body);}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:24px 64px}
+h1,h2{font-family:var(--f-display);text-wrap:balance;margin:0}
+h1{font-size:clamp(1.7rem,4.5vw,2.4rem);font-weight:800;letter-spacing:-.01em;line-height:1.1}
+h1 .js{background:var(--js);color:var(--js-ink);padding:0 .18em;border-radius:4px}
+.sub{color:var(--muted);margin:.5rem 0 0;max-width:62ch}
+.sub a{color:var(--accent)}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--code-bg);padding:.08em .32em;border-radius:4px;word-break:break-word}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin:20px -16px 18px;padding:12px 16px}
+.top-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.overall{flex:1 1 260px;min-width:0}
+.overall-label{display:flex;justify-content:space-between;gap:8px;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.overall-label strong{color:var(--fg);font-weight:600}
+.bar{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;width:0;background:var(--js);border-radius:99px;transition:width .3s ease}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:500 .85rem var(--f-body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.42rem .7rem;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn:focus-visible,.item input:focus-visible,summary:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{font-size:.78rem;color:var(--muted);margin-top:8px}
+.acct{display:flex;align-items:center;gap:8px;margin-top:10px;min-width:0}
+.acct[hidden],.acct [hidden]{display:none}
+.acct .who{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.acct img{width:24px;height:24px;border-radius:50%;flex:none}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.next{font-size:.85rem;margin-top:4px}
+.next a{color:var(--accent);font-weight:600;text-decoration:none}
+
+.how{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:.92rem}
+.how ol{margin:.4rem 0 0;padding-left:1.2rem;display:grid;gap:4px}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+
+.lec{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.lec>summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center}
+.lec>summary::-webkit-details-marker{display:none}
+.num{font:600 .78rem var(--f-mono);color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:.2rem .45rem;white-space:nowrap}
+.lec.complete .num{background:var(--js);color:var(--js-ink);border-color:var(--js)}
+.lec h2{font-size:1.08rem;font-weight:600;min-width:0}
+.count{font:600 .82rem var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.minibar{grid-column:1/-1;height:4px;background:var(--line);border-radius:99px;overflow:hidden}
+.minibar>i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s ease}
+.lec.complete .minibar>i{background:var(--ok)}
+.lec-meta{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 16px 10px;font-size:.84rem;color:var(--muted)}
+.lec-meta a{color:var(--accent)}
+
+.items{list-style:none;margin:0;padding:0 8px 6px}
+.item{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:9px 8px;border-top:1px solid var(--line)}
+.item input{width:18px;height:18px;margin:3px 0 0;accent-color:var(--ok);cursor:pointer}
+.item label{cursor:pointer;min-width:0}
+.item .t{display:block}
+.item.done .t{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line);text-decoration-thickness:2px}
+.tag{display:inline-block;font:600 .68rem/1.6 var(--f-body);letter-spacing:.04em;text-transform:uppercase;border-radius:5px;padding:0 .4rem;margin-right:6px;vertical-align:1px}
+.tag.ex{background:var(--accent-soft);color:var(--accent)}
+.tag.pq{background:var(--pq-soft);color:var(--pq)}
+.tag.hw{background:var(--hw-soft);color:var(--hw)}
+.tag.pr{background:var(--ok-soft);color:var(--ok)}
+.tag.xt{background:var(--code-bg);color:var(--muted)}
+body.hide-done .item.done{display:none}
+body.hide-done .lec.complete{display:none}
+
+.notes{padding:4px 16px 16px}
+.notes label{display:block;font-size:.8rem;font-weight:600;color:var(--muted);letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px}
+.notes textarea{width:100%;min-height:64px;resize:vertical;font:14px/1.5 var(--f-body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.foot{color:var(--muted);font-size:.82rem;margin-top:22px}
+@media (prefers-reduced-motion: reduce){.bar>i,.minibar>i{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <h1>Recreate it: <span class="js">JS</span> course checklist</h1>
+  <p class="sub">Every example and practice question from Shradha Khapra's <a href="https://www.youtube.com/playlist?list=PLGjplNEQ1it_oTvuLRNqXfz_v_0pq6unW" target="_blank" rel="noopener">JavaScript Full Course</a> (Apna College), in the order they come up. After each lecture, close the video and try to write each one yourself.</p>
+
+  <div class="top" id="top">
+    <div class="top-row">
+      <div class="overall">
+        <div class="overall-label"><span><strong id="ov-num">0 / 0</strong> recreated</span><span id="ov-pct">0%</span></div>
+        <div class="bar"><i id="ov-bar"></i></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="btn-hide" aria-pressed="false" type="button">Hide done</button>
+        <button class="btn" id="btn-expand" type="button">Expand all</button>
+      </div>
+    </div>
+    <div class="next" id="next"></div>
+    <div class="status" id="status">Loading your progress…</div>
+  </div>
+
+  <div class="how">
+    <strong>How to use this</strong>
+    <ol>
+      <li>Watch the full lecture, then close it.</li>
+      <li>For each item, write the code from scratch in VS Code without looking. Tick it only once it runs and you can explain the output.</li>
+      <li>If you had to peek, leave it unticked and write what tripped you up in "Where I got stuck". Try it again the next day.</li>
+    </ol>
+    <div class="legend">
+      <span class="tag ex">Example</span><span class="tag pq">Practice Q</span><span class="tag pr">Project step</span><span class="tag hw">Homework</span><span class="tag xt">Extra</span>
+    </div>
+  </div>
+
+  <div id="lectures"></div>
+  <p class="foot">The playlist's "Imp Update" video has no code, so it isn't listed. Items marked Extra aren't built in the video. They're one step past it.</p>
+</div>
+
+<script>
+const Y = id => "https://www.youtube.com/watch?v=" + id + "&list=PLGjplNEQ1it_oTvuLRNqXfz_v_0pq6unW";
+const LECTURES = [
+{ id:"l1", n:"L1", title:"Variables & Data Types", vid:"ajdRvxDWH4w", mins:81, items:[
+ ["ex","In the browser console, run `alert(\"Apna College\")` and `console.log(\"I love JS\")`."],
+ ["ex","Create `index.html` + `first.js`, link them with `<script src=\"first.js\">` and print 3 lines with `console.log`."],
+ ["ex","Store an age, a name (`\"Tony Stark\"`), a price (`99.99`), a boolean (`isFollow`) and `null` in variables and print them."],
+ ["ex","Variable naming rules: write 3 valid names (`full_name`, `$price`, `fullName123`) and show that `full Name` and `123name` throw errors."],
+ ["ex","`var`: re-declare and update the same variable without any error."],
+ ["ex","`let`: show that updating works but re-declaring in the same scope throws."],
+ ["ex","`const`: declare `const PI = 3.14`, try to reassign it, and show `const a;` fails with \"Missing initializer\"."],
+ ["ex","Block scope: write two `{ let a = ... }` blocks that print different values of `a`."],
+ ["ex","Use `typeof` on all 7 primitives: number, string, boolean, undefined, null, `BigInt(\"123\")`, `Symbol(\"hello\")`. Note the odd one (`null`)."],
+ ["ex","Create a `student` object (`fullName`, `age`, `cgpa`, `isPass`) and read values with both `student.age` and `student[\"age\"]`."],
+ ["ex","Update properties of a `const` object (`student.age = student.age + 1`) and explain why that's allowed."],
+ ["ex","Predict, then run, `\"abcd\" + 123`."],
+ ["pq","Create a `const` object `product` for an Amazon product card: title, rating, offer, price."],
+ ["pq","Create a `const` object `profile` for an Instagram profile: username, isFollow, followers, following."]
+]},
+{ id:"l2", n:"L2", title:"Operators & Conditional Statements", vid:"Zg4-uSjxosE", mins:77, items:[
+ ["ex","Write a single-line comment and a multi-line comment."],
+ ["ex","Arithmetic with `a = 5`, `b = 2`: print `+ - * / % **`, each with a label like `\"a + b =\"`."],
+ ["ex","Unary: predict the output of `a++`, `++a`, `a--`, `--a` inside `console.log` before running."],
+ ["ex","Assignment operators: `+=`, `-=`, `*=`, `/=`, `%=`, `**=`."],
+ ["ex","Comparison: show `5 == \"5\"` vs `5 === \"5\"`, `!=` vs `!==`, and `> >= < <=`."],
+ ["ex","Logical: store `condition1 = a > b` and `condition2 = a === 6`, then combine with `&&`, `||` and `!`."],
+ ["ex","`if`: `age >= 18` prints \"you can vote\", plus a second `if` for \"you CANNOT vote\"."],
+ ["ex","Mode example: `mode = \"dark\"` sets `color = \"black\"`, `\"light\"` sets `\"white\"`."],
+ ["ex","`if-else`: odd or even using `num % 2 === 0`."],
+ ["ex","`else if` chain: dark → black, blue → blue, pink → pink, otherwise white."],
+ ["ex","Read input with `prompt()` into a variable and print it. Show an `alert()` too."],
+ ["hw","Read the MDN page on `switch`, then rewrite the mode example with `switch`."],
+ ["pq","Ask for a number with `prompt(\"Enter a number\")` and check if it's a multiple of 5."],
+ ["pq","Grade calculator: 90–100 A, 70–89 B, 60–69 C, 50–59 D, 0–49 F."]
+]},
+{ id:"l3", n:"L3", title:"Loops & Strings", vid:"UmRtFFSDSFo", mins:81, items:[
+ ["ex","`for` loop: print \"apna college\" 5 times, then print `i = 1` to `i = 5`."],
+ ["ex","`for` loop: sum of numbers from 1 to `n` (test with 5 and 100)."],
+ ["ex","`while` loop: print 1 to 5."],
+ ["ex","`do-while`: show it runs once even when false (`i = 20`, condition `i <= 10`)."],
+ ["ex","`for-of`: print each character of `\"apna college\"`, then count the string's length with a counter."],
+ ["ex","`for-in`: loop over a `student` object and print each key with `student[key]`."],
+ ["pq","Print all even numbers from 0 to 100 (then the odd ones)."],
+ ["pq","Guess-the-number game: keep calling `prompt()` in a `while` loop until the user enters `gameNum`."],
+ ["ex","Strings: `str.length` and index access `str[0]`, `str[8]`."],
+ ["ex","Template literal: `The cost of ${obj.item} is ${obj.price} rupees`, plus an expression like `${1 + 2 + 3}`."],
+ ["ex","Escape characters `\\n` and `\\t`. Check how they change `length`."],
+ ["ex","String methods: `toUpperCase()`, `toLowerCase()`, `trim()`."],
+ ["ex","String methods: `slice(start, end)`, `concat()` vs `+`, `replace()`, `charAt()`."],
+ ["pq","Username generator: prompt for full name, output `\"@\" + fullName + fullName.length`."]
+]},
+{ id:"l4", n:"L4", title:"Arrays", vid:"gFWhbjzowrM", mins:60, items:[
+ ["ex","Create `marks = [97, 82, 75, 64, 36]`, print it and its `.length`, and check `typeof marks`."],
+ ["ex","Access `marks[0]`, `marks[2]` and an out-of-range index like `marks[100]`."],
+ ["ex","Change `marks[2] = 66` (arrays are mutable), then try `str[0] = \"y\"` on a string (strings are immutable)."],
+ ["ex","Loop over `heroes` with a classic `for` loop (`i < heroes.length`)."],
+ ["ex","Loop with `for-of`, and print `cities` in uppercase."],
+ ["pq","Average marks of `[85, 97, 44, 37, 76, 60]`."],
+ ["pq","Prices `[250, 645, 300, 900, 50]` have 10% off. Update the array in place to final prices."],
+ ["ex","`push()` (one and many items) and `pop()`. Print what `pop` returns."],
+ ["ex","`toString()` and `concat()` (join `marvelHeroes`, `dcHeroes` and `indianHeroes`)."],
+ ["ex","`unshift()` and `shift()`. Print what `shift` returns."],
+ ["ex","`slice(1, 3)`, `slice(1)`, `slice()`. Confirm the original array is unchanged."],
+ ["ex","`splice()` on `[1..7]`: add (`splice(2, 0, 101)`), delete (`splice(3, 1)`), replace (`splice(3, 1, 101)`)."],
+ ["pq","Companies array: remove the first, replace \"Uber\" with \"Ola\", add \"Amazon\" at the end."]
+]},
+{ id:"l5", n:"L5", title:"Functions & Methods", vid:"P0XMXqDGttU", mins:69, items:[
+ ["ex","Write `myFunction()` that prints two lines, then call it."],
+ ["ex","`sum(x, y)`: explain the difference between parameters and arguments, then call it with different values."],
+ ["ex","`return` a value. Show that a line after `return` never runs."],
+ ["ex","Parameters are local: `console.log(x)` outside the function throws."],
+ ["ex","Arrow functions: `arrowSum`, `arrowMul`, and a one-line `printHello` without braces."],
+ ["pq","`countVowels(str)` using the `function` keyword."],
+ ["pq","The same vowel counter as an arrow function."],
+ ["ex","`forEach` with an inline callback, then with a named callback function."],
+ ["ex","`forEach((city, idx, arr) => ...)` on `cities`, printing all three."],
+ ["pq","Print the square of each number using `forEach`. Then pass a stored `calculateSquare` callback instead."],
+ ["ex","`map`: return a new array with each value doubled."],
+ ["ex","`filter`: keep only even numbers."],
+ ["ex","`reduce`: sum, then the largest value with a ternary (`prev > curr ? prev : curr`), then the smallest."],
+ ["pq","Filter marks above 90 from `[97, 64, 32, 49, 99, 96, 86]`."],
+ ["pq","Take `n` from `prompt`, build an array 1..n, then use `reduce` for the sum and for the factorial."]
+]},
+{ id:"l6", n:"L6", title:"DOM, Part 1", vid:"7zcXPCt8Ck0", mins:83, items:[
+ ["ex","Set up `index.html` with `style.css` and `script.js` (script just before `</body>`). Show why `document.body` is `null` if the script is in `<head>`."],
+ ["ex","`window` object: `window.alert`, `window.console.log`, `console.dir(window.document)`."],
+ ["ex","Change `document.body.style.background` from JS."],
+ ["ex","Sketch your page's DOM tree and name a parent, a child and a sibling. Name the three node types."],
+ ["ex","`getElementById` (also try a missing id → `null`)."],
+ ["ex","`getElementsByClassName` and `getElementsByTagName`. Note they return an HTMLCollection."],
+ ["ex","`querySelector` with a tag, `#id` and `.class`, and `querySelectorAll` (NodeList)."],
+ ["ex","`tagName` on a selected element."],
+ ["ex","`innerText` vs `innerHTML`: set `heading.innerHTML = \"<i>new heading</i>\"`."],
+ ["ex","`textContent` shows hidden text where `innerText` doesn't (hide an element and compare)."],
+ ["pq","`<h2>Hello JavaScript</h2>`: append \" from Apna College students\" to its text using JS."],
+ ["pq","Three divs with class `box`: select them with `querySelectorAll` and give each unique text in a loop."]
+]},
+{ id:"l7", n:"L7", title:"DOM, Part 2", vid:"fXAGTOZ25H8", mins:28, items:[
+ ["ex","`getAttribute(\"id\")` and `getAttribute(\"class\")`."],
+ ["ex","`setAttribute(\"class\", \"newClass\")`."],
+ ["ex","`.style` in camelCase: `backgroundColor`, `fontSize = \"26px\"`, `visibility = \"hidden\"`."],
+ ["ex","`document.createElement(\"button\")` and set its `innerText`."],
+ ["ex","Insert the same button with `append`, `prepend`, `before` and `after`, and see where each one lands."],
+ ["ex","Create an `h1` with `innerHTML` and `prepend` it to `body`."],
+ ["ex","Delete elements with `.remove()`."],
+ ["hw","Read MDN on `appendChild` and `removeChild` and try both."],
+ ["pq","Create a \"click me\" button with a red background and white text, inserted as the first element in `body`."],
+ ["pq","Show that `setAttribute` overwrites an existing class, then fix it with `classList.add()` / `classList.remove()`."]
+]},
+{ id:"l8", n:"L8", title:"Events", vid:"_i-uLJAh79U", mins:33, items:[
+ ["ex","Inline `onclick` on a button: `console.log` and `alert`."],
+ ["ex","Inline `ondblclick` on a button and `onmouseover` on a styled div."],
+ ["ex","Move it to JS: `btn1.onclick = () => { ... }` and `box.onmouseover = ...`."],
+ ["ex","Event object: log `evt.type`, `evt.target`, `evt.clientX`, `evt.clientY`."],
+ ["ex","Assign `onclick` twice and show that only the last one runs."],
+ ["ex","`addEventListener(\"click\", ...)` twice: both handlers run."],
+ ["ex","`removeEventListener` with a stored `handlerThree`. Explain why an inline arrow can't be removed."],
+ ["pq","Dark/light mode toggle button that switches classes on `body`."]
+]},
+{ id:"l9", n:"L9", title:"Project: Tic Tac Toe", vid:"SqrppLEljkY", mins:54, items:[
+ ["pr","HTML: 9 `.box` buttons, a Reset button, a hidden message container and a New Game button."],
+ ["pr","CSS: square board with flexbox, sized boxes, and a `.hide` class (`display: none`)."],
+ ["pr","JS setup: `boxes = querySelectorAll(\".box\")`, `turnO = true`, and the 8 `winPatterns`."],
+ ["pr","Click listener on each box: write O or X, flip `turnO`, disable that box."],
+ ["pr","`checkWinner()`: loop `winPatterns`, read the three values, check non-empty and equal."],
+ ["pr","`showWinner()`: set the message, remove `.hide`, call `disableBoxes()`."],
+ ["pr","`resetGame()`: `turnO = true`, `enableBoxes()` (clears text), hide the message. Wire it to both buttons."],
+ ["pr","Rebuild the whole game from a blank folder without the video."],
+ ["xt","Detect a draw when all 9 boxes are filled with no winner."]
+]},
+{ id:"l10", n:"L10", title:"Project: Stone, Paper, Scissors", vid:"_V33HCZWLDQ", mins:47, items:[
+ ["pr","HTML: three `.choice` divs (ids `rock`, `paper`, `scissors`) with images, a score board and a `#msg` box."],
+ ["pr","CSS: flex layout for the choices, hover effect, styled score board and message."],
+ ["pr","JS setup: `userScore = 0`, `compScore = 0`, `choices = querySelectorAll(\".choice\")`."],
+ ["pr","Click listener on each choice: read its `id` and call `playGame(userChoice)`."],
+ ["pr","`genCompChoice()` with `Math.floor(Math.random() * 3)` and an options array."],
+ ["pr","`playGame()`: handle the draw case, otherwise work out `userWin` for each user choice."],
+ ["pr","`drawGame()` and `showWinner(userWin, userChoice, compChoice)`: update the scores, message text and color."],
+ ["pr","Rebuild the whole game from a blank folder without the video."],
+ ["xt","Add a Reset Score button."]
+]},
+{ id:"l11", n:"L11", title:"Classes & Objects", vid:"N-O4w6PynGY", mins:61, items:[
+ ["ex","Object literal `student` with a `printMarks()` method that uses `this.marks`."],
+ ["ex","Prototypes: inspect an array's prototype in the console, then set `obj.__proto__ = employee` and call the inherited `calcTax()`."],
+ ["ex","Give the object its own `calcTax()` and show it wins over the prototype's."],
+ ["ex","`class ToyotaCar` with `start()`, `stop()`, `setBrand()`. Create `fortuner` and `lexus` with `new`."],
+ ["ex","Add `constructor(brand, mileage)` and pass values to `new ToyotaCar(...)`."],
+ ["ex","Inheritance: `class Child extends Parent` and call the parent's method."],
+ ["ex","`Person` / `Engineer`: `super(name)` in the constructor, `super.eat()` in a method, and method overriding."],
+ ["pq","`User` class with `name`, `email` and `viewData()`. Create two students and a teacher."],
+ ["pq","`Admin extends User` with `editData()` that changes `DATA`."],
+ ["ex","Wrap `a + c` (undefined `c`) in `try...catch` so the lines after it still run."]
+]},
+{ id:"l12", n:"L12", title:"Callbacks, Promises & Async/Await", vid:"d3jXofmQm44", mins:84, items:[
+ ["ex","Sync vs async: log 1 to 4, then put one log inside `setTimeout` and predict the order."],
+ ["ex","Callback: `calculator(a, b, sumCallback)`."],
+ ["ex","`getData(dataId, getNextData)` with `setTimeout`, nested 1 → 4 (callback hell)."],
+ ["ex","`new Promise((resolve, reject) => ...)` with `.then()` and `.catch()`. Try both `resolve` and `reject`."],
+ ["ex","Log a promise while pending, fulfilled and rejected."],
+ ["ex","Promise chaining: `asyncFunc1().then(() => asyncFunc2()).then(...)`."],
+ ["ex","Rewrite `getData` to return a promise and chain data 1 → 3."],
+ ["ex","Show that an `async function` always returns a promise."],
+ ["ex","`api()` returning a promise; `await` it twice inside `getWeatherData()`."],
+ ["ex","`getAllData()` with `await getData(1)` … `await getData(5)`."],
+ ["ex","The same thing as an async IIFE: `(async function () { ... })();`"]
+]},
+{ id:"l13", n:"L13", title:"Fetch API + Currency Converter", vid:"CyGodpqcid4", mins:77, items:[
+ ["ex","`fetch` the cat facts URL with `async/await` and log the response and its `status`."],
+ ["ex","`await response.json()` and print `data[0].text`."],
+ ["ex","The same fetch with `.then()` chaining instead of `await`."],
+ ["ex","From memory: GET / POST / PATCH / DELETE, and status codes 200, 404, 500."],
+ ["hw","Send a POST request with `fetch` options (method, headers, body)."],
+ ["pr","HTML/CSS: amount input, From/To selects with flag images, swap icon, message, button."],
+ ["pr","Fill both selects from `countryList` with `for-in` + `createElement(\"option\")`. Default to USD → INR."],
+ ["pr","`updateFlag(element)` on `change` using `evt.target` and the flagsapi URL."],
+ ["pr","Button click: `evt.preventDefault()`, and treat an empty or negative amount as 1."],
+ ["pr","`updateExchangeRate()`: build the URL, fetch, read the rate, show `finalAmount` in the message."],
+ ["pr","Run `updateExchangeRate()` on `window` load."],
+ ["xt","Make the swap icon actually swap the From and To currencies."]
+]}
+];
+const TAGS = {ex:"Example", pq:"Practice Q", pr:"Project step", hw:"Homework", xt:"Extra"};
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function fmt(s){return esc(s).replace(/`([^`]+)`/g,"<code>$1</code>");}
+
+let state = {done:{}, notes:{}};
+const LS_KEY = "js-recreate-v1";
+function readLocal(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null;}catch(e){return null;}}
+function writeLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}}
+const local = readLocal(); if(local && local.done) state = {done:local.done||{}, notes:local.notes||{}};
+
+/* ---------- Build DOM once ---------- */
+const host = document.getElementById("lectures");
+LECTURES.forEach(L=>{
+  const d = document.createElement("details");
+  d.className="lec"; d.id=L.id;
+  d.innerHTML =
+    `<summary><span class="num">${L.n}</span><h2>${esc(L.title)}</h2><span class="count" data-count></span><span class="minibar"><i data-mini></i></span></summary>
+     <div class="lec-meta"><a href="${Y(L.vid)}" target="_blank" rel="noopener">Watch on YouTube</a><span>${L.mins} min</span></div>
+     <ul class="items">${L.items.map((it,i)=>{
+        const key=L.id+"-"+i;
+        return `<li class="item" data-key="${key}"><input type="checkbox" id="c-${key}"><label for="c-${key}"><span class="t"><span class="tag ${it[0]}">${TAGS[it[0]]}</span>${fmt(it[1])}</span></label></li>`;
+     }).join("")}</ul>
+     <div class="notes"><label for="n-${L.id}">Where I got stuck</label><textarea id="n-${L.id}" placeholder="e.g. forgot that splice changes the original array"></textarea></div>`;
+  host.appendChild(d);
+});
+
+/* ---------- Update view from state ---------- */
+function countable(L){return L.items.filter(it=>it[0]!=="xt").length;}
+function doneCount(L){return L.items.filter((it,i)=>it[0]!=="xt" && state.done[L.id+"-"+i]).length;}
+function update(){
+  let tot=0, dn=0, next=null;
+  LECTURES.forEach(L=>{
+    const el=document.getElementById(L.id);
+    L.items.forEach((it,i)=>{
+      const key=L.id+"-"+i, on=!!state.done[key];
+      const li=el.querySelector(`[data-key="${key}"]`);
+      li.classList.toggle("done",on);
+      li.querySelector("input").checked=on;
+      if(!on && !next && it[0]!=="xt") next={L,i};
+    });
+    const c=countable(L), d=doneCount(L);
+    tot+=c; dn+=d;
+    el.querySelector("[data-count]").textContent=d+" / "+c;
+    el.querySelector("[data-mini]").style.width=(c?d/c*100:0)+"%";
+    el.classList.toggle("complete",c>0&&d===c);
+    const ta=document.getElementById("n-"+L.id);
+    if(document.activeElement!==ta) ta.value=state.notes[L.id]||"";
+  });
+  const pct = tot?Math.round(dn/tot*100):0;
+  document.getElementById("ov-num").textContent=dn+" / "+tot;
+  document.getElementById("ov-pct").textContent=pct+"%";
+  document.getElementById("ov-bar").style.width=pct+"%";
+  const nx=document.getElementById("next");
+  if(next){nx.innerHTML=`Next up: <a href="#${next.L.id}" data-jump="${next.L.id}">${next.L.n} · ${esc(next.L.title)}</a>`;}
+  else nx.textContent="Everything recreated. Time to build your own project.";
+}
+
+/* ---------- Saving ---------- */
+let saver = null;            // set when db is available
+let saveTimer=null, inflight=false, dirty=false;
+function scheduleSave(){
+  writeLocal();
+  if(!saver) return;
+  dirty=true; clearTimeout(saveTimer); saveTimer=setTimeout(flush,2000);
+}
+async function flush(){
+  if(!saver||inflight||!dirty) return;
+  inflight=true; dirty=false;
+  try{ await saver(JSON.parse(JSON.stringify(state))); setStatus("Saved to your account. Sign in on any device to see it."); }
+  catch(e){ setStatus("Couldn't save to your account just now. Your ticks are kept in this browser."); }
+  inflight=false;
+  if(dirty) flush();
+}
+function setStatus(t){document.getElementById("status").textContent=t;}
+
+/* ---------- Events ---------- */
+host.addEventListener("change",e=>{
+  const li=e.target.closest(".item"); if(!li) return;
+  const k=li.dataset.key;
+  if(e.target.checked) state.done[k]=true; else delete state.done[k];
+  update(); scheduleSave();
+});
+let noteTimer=null;
+host.addEventListener("input",e=>{
+  if(e.target.tagName!=="TEXTAREA") return;
+  const id=e.target.id.slice(2);
+  const v=e.target.value;
+  if(v) state.notes[id]=v; else delete state.notes[id];
+  clearTimeout(noteTimer); noteTimer=setTimeout(scheduleSave,500);
+});
+document.getElementById("btn-hide").addEventListener("click",e=>{
+  const on=e.currentTarget.getAttribute("aria-pressed")!=="true";
+  e.currentTarget.setAttribute("aria-pressed",String(on));
+  document.body.classList.toggle("hide-done",on);
+  try{localStorage.setItem(LS_KEY+"-hide",on?"1":"");}catch(_){}
+});
+const expBtn=document.getElementById("btn-expand");
+expBtn.addEventListener("click",()=>{
+  const all=[...document.querySelectorAll(".lec")];
+  const open=!all.every(d=>d.open);
+  all.forEach(d=>d.open=open);
+  expBtn.textContent=open?"Collapse all":"Expand all";
+});
+document.getElementById("next").addEventListener("click",e=>{
+  const a=e.target.closest("[data-jump]"); if(!a) return;
+  const d=document.getElementById(a.dataset.jump); d.open=true;
+});
+try{ if(localStorage.getItem(LS_KEY+"-hide")){document.getElementById("btn-hide").click();} }catch(_){}
+
+/* open the lecture you're on */
+update();
+(function(){const firstOpen=LECTURES.find(L=>doneCount(L)<countable(L));if(firstOpen)document.getElementById(firstOpen.id).open=true;})();
+setStatus(local?"Saved in this browser.":"Your ticks are saved in this browser.");
+
+/* ---------- hooks used by the Firebase module below ---------- */
+window.TRACKER={
+  setStatus,
+  hasLocal:()=>Object.keys(state.done).length>0||Object.keys(state.notes).length>0,
+  applyRemote(d){ if(inflight||dirty) return; state={done:{...(d.done||{})},notes:{...(d.notes||{})}}; writeLocal(); update(); },
+  setSaver(fn){ saver=fn; },
+  pushNow(){ dirty=true; flush(); },
+  flushNow(){ clearTimeout(saveTimer); flush(); }
+};
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden") window.TRACKER.flushNow(); });
+</script>
+</body>
+</html>
