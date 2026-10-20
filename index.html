@@ -7,7 +7,10 @@
 <meta name="theme-color" content="#1b1b1b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="./assets/auth-core.js">
+<!-- fonts load without blocking the page; system fonts show until they arrive -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@600&display=swap" media="print" onload="this.media='all'">
 <style>
 /* Dark grey (#1b1b1b), monochrome. */
 :root{
@@ -20,14 +23,17 @@
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
+html{-webkit-tap-highlight-color:transparent}
 body{margin:0;color:var(--fg);font:15px/1.55 var(--f-body);min-height:100vh}
 .wrap{max-width:860px;margin:0 auto;padding:24px 16px 64px}
 .head{display:flex;justify-content:flex-end;align-items:center;min-height:36px;margin-bottom:36px}
 h1{font:800 clamp(2.2rem,7vw,3.4rem)/1 var(--f-display);margin:0;letter-spacing:-.02em}
 .sub{color:var(--muted);margin:.8rem 0 32px;max-width:52ch}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
-.card{position:relative;display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;color:inherit;text-decoration:none;transition:border-color .15s,box-shadow .15s,transform .15s}
-.card:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);transform:translateY(-2px)}
+.card{position:relative;display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:border-color .15s,box-shadow .15s,transform .15s}
+/* white outline: on hover (mouse) and instantly on press (touch) */
+@media (hover:hover){.card:hover{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);transform:translateY(-2px)}}
+.card:active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);transition:none}
 .card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .card .tag{align-self:flex-start;font:600 .7rem var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--tag-bg);border-radius:6px;padding:.2rem .5rem}
 .card h2{font:600 1.08rem var(--f-body);margin:6px 0 0}
@@ -68,7 +74,7 @@ document.getElementById("grid").innerHTML = ARTIFACTS.map(a => `
   </a>`).join("");
 </script>
 <script type="module">
-import { mountAuth } from "./assets/auth.js";
+import { mountAuth } from "./assets/auth-core.js";
 mountAuth({ appName: "these tools", required: false });
 </script>
 </body>
