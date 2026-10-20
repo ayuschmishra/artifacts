@@ -60,11 +60,12 @@ h1{font:800 clamp(2.2rem,7vw,3.4rem)/1 var(--f-display);margin:0;letter-spacing:
    name:   what the card says
    tag:    small label above the name (optional)
    about:  one line under the name (optional)
-   icon:   a logo image next to the name, e.g. "pytorch/logo.svg" (optional; put the file in that folder)                                        */
+   icon:   a logo next to the name (optional). Either a file in the folder ("js_course/logo.svg")
+           or a brand icon from simpleicons.org: "https://cdn.simpleicons.org/<name>" e.g. python, tensorflow, react                                        */
 const ARTIFACTS = [
   { folder: "mad2-tracker", name: "MAD-II study tracker", tag: "IIT Madras · MAD-II", about: "All 57 videos, week by week, with theory and code checklists and notes." },
   { folder: "js_course",    name: "JavaScript Course",    tag: "Apna College · JS",   about: "Every example and practice question from the JS full course, lecture by lecture.", icon: "js_course/logo.svg" },
-  { folder: "pytorch",      name: "PyTorch",              tag: "Self-study · PyTorch", about: "Package by package, from tensors to training, evaluating and shipping models.", icon: "pytorch/logo.svg" },
+  { folder: "pytorch",      name: "PyTorch",              tag: "Self-study · PyTorch", about: "Package by package, from tensors to training, evaluating and shipping models.", icon: "https://cdn.simpleicons.org/pytorch" },
 ];
 
 const esc = s => String(s || "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
